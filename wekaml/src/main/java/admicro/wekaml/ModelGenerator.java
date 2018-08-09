@@ -153,8 +153,8 @@ public class ModelGenerator {
 	
 	public void saveEvaluation(Evaluation eval, String evalPath)
 	{
-		try (PrintWriter out = new PrintWriter(evalPath)) {
-		    out.println(eval.toSummaryString());
+		try (PrintWriter out = new PrintWriter(evalPath)) {			
+		    out.println("Time: "+eval.totalCost()+"\n"+eval.toSummaryString());
 		} catch (FileNotFoundException e) {			
 			e.printStackTrace();
 		}
