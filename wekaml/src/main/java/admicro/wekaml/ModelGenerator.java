@@ -155,8 +155,13 @@ public class ModelGenerator {
 	{
 		try (PrintWriter out = new PrintWriter(evalPath)) {			
 		    out.println("Time: "+eval.totalCost()+"\n"+eval.toSummaryString());
+		    try {
+				out.println(eval.toClassDetailsString());
+			} catch (Exception e) {				
+				e.printStackTrace();
+			}		    
 		} catch (FileNotFoundException e) {			
-			e.printStackTrace();
+			e.printStackTrace();			
 		}
 	}
 
