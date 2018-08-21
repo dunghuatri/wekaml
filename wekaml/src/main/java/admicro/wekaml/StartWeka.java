@@ -32,9 +32,9 @@ public class StartWeka {
 
 //	public static final String DATASETPATH = "data/iris.2D.arff";
 //	public static final String DATASETPATH = "data/heart.csv";
-//	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_event.csv";
+	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_event.csv";
 //	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_topic.csv";
-	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_ne.csv";
+//	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_ne.csv";
 	public static String MODElPATH = "model";
 	public static String RESULTPATH = "result";
 	public static String EVALPATH = "result";
@@ -56,7 +56,9 @@ public class StartWeka {
 		//-------------------------------------------//
 		Preporcess prep = new Preporcess();
 //		Instances preprocessedData = prep.Numeric2Nominal(originalData,"last");
-		Instances preprocessedData = originalData;
+		Instances preprocessedData = prep.removeFeatures(originalData, "1-2");		
+//		Instances preprocessedData = originalData;
+		
 		//-------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime-startTime;
@@ -156,7 +158,7 @@ public class StartWeka {
 		totalTime = endTime-startTime;
 		System.out.println("done "+totalTime/1000+" s");
 		
-		// Save evaluation
+		// Show tree
 		System.out.println("Showing tree ...");
 		startTime = System.currentTimeMillis();
 		//-------------------------------------------//
@@ -166,6 +168,167 @@ public class StartWeka {
 		endTime = System.currentTimeMillis();
 		totalTime = endTime-startTime;
 		System.out.println("done "+totalTime/1000+" s");
+	}
+	
+	public void trainREPTree(String trainDataPath) throws Exception
+	{
+		/*Measure time*/
+		long startTime;
+		long endTime;
+		long totalTime;
+		
+		ModelGenerator mg = new ModelGenerator();		
+		Instances trainData = mg.loadDataset(trainDataPath);
+		
+		// Preprocess data
+		System.out.println("Preprocessing ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		Preporcess prep = new Preporcess();
+		Instances preprocessedData = prep.removeFeatures(trainData, "1-2");
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+		
+		Filter filter = new Normalize();
+		
+		// Normalize dataset
+		System.out.println("Normalizing ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		filter.setInputFormat(preprocessedData);		
+		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+
+		// build classifier with train dataset
+		System.out.println("Building model ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		REPTree trainedModel = (REPTree) mg.buildClassifier(datasetnor);
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+		
+		// Save model
+		System.out.println("Saving model ...");		
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		mg.saveModel(trainedModel, MODElPATH);		
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+				
+		// Show tree
+		System.out.println("Showing tree ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		mg.showTree(trainedModel,TREEPATH);
+		createDotGraph();
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+	}
+	
+	public void testREPTree(String modelPath, String trainDataPath, String testDataPath) throws Exception
+	{
+		/*Measure time*/
+		long startTime;
+		long endTime;
+		long totalTime;
+		
+		ModelGenerator mg = new ModelGenerator();		
+		Instances trainData = mg.loadDataset(trainDataPath);
+		Instances testData = mg.loadDataset(testDataPath);
+		
+		// Preprocess data
+		System.out.println("Preprocessing ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		Preporcess prep = new Preporcess();
+		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1-2");
+		Instances preprocessedTestData = prep.removeFeatures(testData, "1-2");
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+		
+		Filter filterTrain = new Normalize();
+		Filter filterTest = new Normalize();
+		
+		// Normalize dataset
+		System.out.println("Normalizing ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		filterTrain.setInputFormat(preprocessedTrainData);		
+		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
+		filterTest.setInputFormat(preprocessedTestData);
+		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
+		
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+				
+		// Load model
+		System.out.println("Loading model ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		REPTree loadedModel = (REPTree) mg.loadModel(modelPath);
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+
+		// Evaluate classifier with test dataset
+		System.out.println("Evaluating ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
+//		System.out.println("Evaluation: " + eval.toSummaryString("", true));
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+
+		// Save predicted results
+		System.out.println("Saving results ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		mg.savePredicted(eval, RESULTPATH);
+		mg.convertScoreToLabel(RESULTPATH, RESULTPATH, 0.6);
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+
+		// Save evaluation
+		System.out.println("Saving evaluation ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		mg.saveEvaluation(eval, EVALPATH);
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+	}
+	
+	
+	public static void runWeka2() throws Exception
+	{
+		StartWeka wk = new StartWeka();
+		System.out.println("Training ...");
+		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId/shit/Train_graph_event.csv";
+		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId/shit/Test_graph_event.csv";
+		wk.trainREPTree(trainDataPath);
+		System.out.println("Testing ...");
+		wk.testREPTree(MODElPATH, trainDataPath, testDataPath);
 	}
 	
 	public static void createDotGraph() throws IOException
@@ -188,8 +351,11 @@ public class StartWeka {
 //		RESULTPATH = args[2];
 //		EVALPATH = args[3];
 //		TREEPATH = args[4];
-		runWeka();
+//		runWeka();
 //		createDotGraph();
+//		ModelGenerator mg = new ModelGenerator();
+//		mg.createTrainAndTestDataset("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId/features_newsId_graph_ne.csv", "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId");
+		runWeka2();
 		System.out.println("Done!");
 	}
 

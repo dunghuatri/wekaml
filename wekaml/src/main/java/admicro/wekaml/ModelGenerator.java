@@ -1,6 +1,7 @@
 package admicro.wekaml;
 
 import java.awt.BorderLayout;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -21,9 +22,13 @@ import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.trees.REPTree;
+import weka.core.Debug;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
+import weka.core.converters.CSVSaver;
 import weka.core.converters.ConverterUtils.DataSource;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Normalize;
 import weka.core.converters.TextDirectoryLoader;
 import weka.gui.treevisualizer.PlaceNode2;
 import weka.gui.treevisualizer.TreeVisualizer;
@@ -295,6 +300,42 @@ public class ModelGenerator {
 			e.printStackTrace();
 		}
 		return eval;
+	}
+	
+	public void createTrainAndTestDataset(String dataPath, String outPath) throws Exception
+	{
+		long startTime;
+		long endTime;
+		long totalTime;
+		
+		Instances originalData = loadDataset(dataPath);
+		// divide dataset to train dataset 60% and test dataset 40%
+		int trainSize = (int) Math.round(originalData.numInstances() * 0.6);
+		int testSize = originalData.numInstances() - trainSize;
+		
+		originalData.randomize(new Debug.Random(1));
+
+		System.out.println("Deviding dataset ...");
+		startTime = System.currentTimeMillis();
+		//-------------------------------------------//
+		Instances traindataset = new Instances(originalData, 0, trainSize);
+		Instances testdataset = new Instances(originalData, trainSize, testSize);
+		//-------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime-startTime;
+		System.out.println("done "+totalTime/1000+" s");
+		
+		CSVSaver saverTrain = new CSVSaver();		
+		saverTrain.setInstances(traindataset);
+		saverTrain.setFile(new File(outPath+"/Train.csv"));
+		saverTrain.setNoHeaderRow(false);
+		saverTrain.writeBatch();
+		
+		CSVSaver saverTest = new CSVSaver();		
+		saverTest.setInstances(testdataset);
+		saverTest.setFile(new File(outPath+"/Test.csv"));
+		saverTest.setNoHeaderRow(false);
+		saverTest.writeBatch();
 	}
 	
 	public static void main(String[] args) throws Exception {

@@ -8,6 +8,7 @@ import weka.core.converters.ArffSaver;
 import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.NumericToNominal;
+import weka.filters.unsupervised.attribute.Remove;
 
 public class Preporcess {
 	
@@ -43,6 +44,21 @@ public class Preporcess {
             System.out.println("Attribute "+(i+1)+"\tNominal?\t"+newData.attribute(i).name());
         }        */
         return newData;        
+	}
+	
+	public Instances removeFeatures(Instances originalData, String range) throws Exception
+	{
+		Remove remove = new Remove();
+		
+		String[] options= new String[2];
+        options[0]="-R";
+        options[1]=range;
+        
+        remove.setOptions(options);
+        remove.setInputFormat(originalData);
+        
+        Instances newData=Filter.useFilter(originalData, remove);
+        return newData;
 	}
 	
 	public void CSVToArff(String csvFilePath, String arffFilePath) throws IOException

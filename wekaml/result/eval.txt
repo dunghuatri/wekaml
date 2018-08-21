@@ -1,19 +1,19 @@
 Time: 0.0
 
-Correlation coefficient                  0.609 
-Mean absolute error                      0.184 
-Root mean squared error                  0.2723
-Relative absolute error                 58.1491 %
-Root relative squared error             80.3813 %
+Correlation coefficient                  0.4946
+Mean absolute error                      0.2581
+Root mean squared error                  0.3498
+Relative absolute error                 72.3206 %
+Root relative squared error             89.2018 %
 Total Number of Instances             2400     
 
-TP = 76.0	FP = 96.0
-FN = 582.0	TN = 1646.0
+TP = 349.0	FP = 157.0
+FN = 452.0	TN = 1442.0
 -------------------
 
-Accuracy:	0.7175
+Accuracy:	0.74625
 
 Class		 Precision			 Recall					 F1
-1		 0.4418604651162791		0.11550151975683891		0.18313253012048195
-0		 0.7387791741472173		0.9448909299655568		0.8292191435768261
-AVG		 0.5903198196317482		0.5301962248611979		0.5061758368486541
+1		 0.6897233201581028		0.43570536828963796		0.5340474368783473
+0		 0.7613516367476241		0.9018136335209506		0.8256513026052104
+AVG		 0.7255374784528634		0.6687595009052942		0.6798493697417789
