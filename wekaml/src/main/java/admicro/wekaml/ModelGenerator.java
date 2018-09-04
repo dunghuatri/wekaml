@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,10 +22,13 @@ import weka.classifiers.Classifier;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.functions.MultilayerPerceptron;
+import weka.classifiers.trees.M5P;
 import weka.classifiers.trees.REPTree;
 import weka.core.Debug;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
+import weka.core.converters.CSVLoader;
 import weka.core.converters.CSVSaver;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
@@ -50,7 +54,27 @@ public class ModelGenerator {
 		return dataset;
 	}
 
-	public Classifier buildClassifier(Instances traindataset) {
+	public Instances loadDatasetWithId(String path) {
+		Instances dataset = null;
+		try {
+			// dataset = DataSource.read(path);
+			CSVLoader loader = new CSVLoader();
+			loader.setNominalAttributes("1,2");
+			loader.setSource(new File(path));
+			dataset = loader.getDataSet();
+
+			// Make the last attribute be the class
+			if (dataset.classIndex() == -1) {
+				dataset.setClassIndex(dataset.numAttributes() - 1);
+			}
+		} catch (Exception ex) {
+			Logger.getLogger(ModelGenerator.class.getName()).log(Level.SEVERE, null, ex);
+		}
+
+		return dataset;
+	}
+
+	public Classifier buildClassifierREPTree(Instances traindataset) {
 		REPTree rt = new REPTree();
 
 		rt.setBatchSize("64");
@@ -62,7 +86,7 @@ public class ModelGenerator {
 		rt.setMinVarianceProp(0.001);
 		// rt.setNoPruning(false);
 		// rt.setNumDecimalPlaces(2);
-		rt.setNumFolds(10);
+		rt.setNumFolds(3);
 		// rt.setSeed(1);
 		// rt.setSpreadInitialCount(false);
 
@@ -114,6 +138,59 @@ public class ModelGenerator {
 		return rt;
 	}
 
+	public Classifier buildClassifierM5P(Instances traindataset) {
+		M5P m5p = new M5P();
+
+		m5p.setBatchSize("64");
+		m5p.setBuildRegressionTree(true);
+		// m5p.setDebug(false);
+		// m5p.setDoNotCheckCapabilities(false);
+		// m5p.setMinNumInstances(4);
+		// m5p.setNumDecimalPlaces(2);
+		// m5p.setSaveInstances(false);
+		// m5p.setUnpruned(false);
+		// m5p.setUseUnsmoothed(false);
+
+		/*
+		 * unpruned -- Whether unpruned tree/rules are to be generated (default = false).
+		 * 
+		 * numDecimalPlaces -- The number of decimal places to be used for the
+		 * output of numbers in the model (default = 2).
+		 * 
+		 * batchSize -- The preferred number of instances to process if batch
+		 * prediction is being performed. More or fewer instances may be
+		 * provided, but this gives implementations a chance to specify a
+		 * preferred batch size (default = 100).
+		 * 
+		 * debug -- If set to true, classifier may output additional info to the
+		 * console (default = false).
+		 * 
+		 * useUnsmoothed -- Whether to use unsmoothed predictions (default = false).
+		 * 
+		 * saveInstances -- Whether to save instance data at each node in the
+		 * tree for visualization purposes (default = false).
+		 * 
+		 * minNumInstances -- The minimum number of instances to allow at a leaf
+		 * node (default = 4).
+		 * 
+		 * doNotCheckCapabilities -- If set, classifier capabilities are not
+		 * checked before classifier is built (Use with caution to reduce
+		 * runtime) (default = false).
+		 * 
+		 * buildRegressionTree -- Whether to generate a regression tree/rule
+		 * instead of a model tree/rule (default = false).
+		 * 
+		 */
+		
+		try {
+			m5p.buildClassifier(traindataset);
+
+		} catch (Exception ex) {
+			Logger.getLogger(ModelGenerator.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		return m5p;
+	}
+
 	public Evaluation evaluateModel(Classifier model, Instances traindataset, Instances testdataset) {
 		Evaluation eval = null;
 		try {
@@ -129,16 +206,26 @@ public class ModelGenerator {
 	public void saveModel(Classifier model, String modelpath) {
 
 		try {
-			SerializationHelper.write(modelpath+"/REPTree_model.bin", model);
+			SerializationHelper.write(modelpath, model);
 		} catch (Exception ex) {
 			Logger.getLogger(ModelGenerator.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 
-	public Classifier loadModel(String modelpath) {
+	public Classifier loadModelREPTree(String modelpath) {
 		REPTree model = new REPTree();
 		try {
-			model = (REPTree) SerializationHelper.read(modelpath+"/REPTree_model.bin");
+			model = (REPTree) SerializationHelper.read(modelpath);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return model;
+	}
+	
+	public Classifier loadModelM5P(String modelpath) {
+		M5P model = new M5P();
+		try {
+			model = (M5P) SerializationHelper.read(modelpath);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -146,7 +233,7 @@ public class ModelGenerator {
 	}
 
 	public void savePredicted(Evaluation eval, String predictedPath) throws IOException {
-		try (Writer writer = Files.newBufferedWriter(Paths.get(predictedPath+"/result_score.csv"));
+		try (Writer writer = Files.newBufferedWriter(Paths.get(predictedPath + "/result_score.csv"));
 
 				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
 						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
@@ -161,28 +248,132 @@ public class ModelGenerator {
 		}
 	}
 
+	public void savePredictedWithId(Instances testData, Evaluation eval, String predictedPath) throws IOException {
+		try (Writer writer = Files.newBufferedWriter(Paths.get(predictedPath + "/result_Id_score.csv"));
+
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "newsId1", "newsId2", "Predicted", "Actual" };
+			csvWriter.writeNext(headerRecord);
+
+			ArrayList<Prediction> results = eval.predictions();
+			for (int i = 0; i < results.size(); i++) {
+				csvWriter.writeNext(new String[] { testData.get(i).toString(0), testData.get(i).toString(1),
+						Double.toString(results.get(i).predicted()), Double.toString(results.get(i).actual()) });
+			}
+		}
+	}
+
+	public void saveSortedResult(String resultPath, HashMap<String, List<Instance>> sortedResult) throws IOException {
+		// HashMap<String, List<Instance>> sortedResult =
+		// sortResultByAttribute(resultPath+"/result_Id_score.csv",2);
+		try (Writer writer = Files.newBufferedWriter(Paths.get(resultPath + "/result_Id_score_sorted.csv"));
+
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "newsId1", "newsId2", "Predicted", "Actual" };
+			csvWriter.writeNext(headerRecord);
+
+			for (String newsId1 : sortedResult.keySet()) {
+				List<Instance> listInstance = sortedResult.get(newsId1);
+				for (int i = 0; i < listInstance.size(); i++) {
+					Instance record = listInstance.get(i);
+					csvWriter.writeNext(
+							new String[] { newsId1, record.toString(1), record.toString(2), record.toString(3) });
+				}
+
+			}
+		}
+	}
+
+	public HashMap<String, List<Instance>> sortResultByAttribute(String resultPath, int attIndex) {
+		Instances resultData = loadDatasetWithId(resultPath);
+		resultData.sort(attIndex);
+		HashMap<String, List<Instance>> sortedResult = new HashMap<>();
+		for (int i = resultData.numInstances() - 1; i >= 0; i--) {
+			Instance record = resultData.get(i);
+			String newsId1 = record.toString(0);
+			if (sortedResult.keySet().contains(newsId1)) {
+				sortedResult.get(newsId1).add(record);
+			} else {
+				List<Instance> listInstance = new ArrayList<>();
+				listInstance.add(record);
+				sortedResult.put(newsId1, listInstance);
+			}
+		}
+		return sortedResult;
+	}
+
 	public void saveEvaluation(Evaluation eval, String evalPath) {
-		try (PrintWriter out = new PrintWriter(evalPath+"/eval.txt")) {
+		try (PrintWriter out = new PrintWriter(evalPath + "/eval.txt")) {
 			out.println("Time: " + eval.totalCost() + "\n" + eval.toSummaryString());
 			try {
 				// out.println(eval.toClassDetailsString());
 				List<Double> eval2 = evaluation(evalPath);
-				out.print("TP = "+eval2.get(0)+"\t");
-				out.println("FP = "+eval2.get(1));
-				out.print("FN = "+eval2.get(2)+"\t");
-				out.println("TN = "+eval2.get(3));
+				out.print("TP = " + eval2.get(0) + "\t");
+				out.println("FP = " + eval2.get(1));
+				out.print("FN = " + eval2.get(2) + "\t");
+				out.println("TN = " + eval2.get(3));
 				out.println("-------------------\n");
-				
-				out.println("Accuracy:\t"+eval2.get(4)+"\n");
+
+				out.println("Accuracy:\t" + eval2.get(4) + "\n");
 				out.println("Class\t\t Precision\t\t\t Recall\t\t\t\t\t F1");
-				out.println("1\t\t "+eval2.get(5)+"\t\t"+eval2.get(6)+"\t\t"+eval2.get(7));
-				out.println("0\t\t "+eval2.get(8)+"\t\t"+eval2.get(9)+"\t\t"+eval2.get(10));
-				out.println("AVG\t\t "+eval2.get(11)+"\t\t"+eval2.get(12)+"\t\t"+eval2.get(13));
+				out.println("1\t\t " + eval2.get(5) + "\t\t" + eval2.get(6) + "\t\t" + eval2.get(7));
+				out.println("0\t\t " + eval2.get(8) + "\t\t" + eval2.get(9) + "\t\t" + eval2.get(10));
+				out.println("AVG\t\t " + eval2.get(11) + "\t\t" + eval2.get(12) + "\t\t" + eval2.get(13));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void saveEvaluationNoTime(String evalPath) {
+		try (PrintWriter out = new PrintWriter(evalPath + "/eval.txt")) {
+			try {
+				// out.println(eval.toClassDetailsString());
+				List<Double> eval2 = evaluation(evalPath);
+				out.print("TP = " + eval2.get(0) + "\t");
+				out.println("FP = " + eval2.get(1));
+				out.print("FN = " + eval2.get(2) + "\t");
+				out.println("TN = " + eval2.get(3));
+				out.println("-------------------\n");
+
+				out.println("Accuracy:\t" + eval2.get(4) + "\n");
+				out.println("Class\t\t Precision\t\t\t Recall\t\t\t\t\t F1");
+				out.println("1\t\t " + eval2.get(5) + "\t\t" + eval2.get(6) + "\t\t" + eval2.get(7));
+				out.println("0\t\t " + eval2.get(8) + "\t\t" + eval2.get(9) + "\t\t" + eval2.get(10));
+				out.println("AVG\t\t " + eval2.get(11) + "\t\t" + eval2.get(12) + "\t\t" + eval2.get(13));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void saveEvaluationTopK(String evalPath, int topK, double cut_off) throws IOException {
+		try (Writer writer = Files.newBufferedWriter(Paths.get(evalPath + "/evalTopK.csv"));
+
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "newsId", "Predict Positive", "Actual Positive", "True Positive", "Precision",
+					"Recall", "F1" };
+			csvWriter.writeNext(headerRecord);
+
+			List<List<String[]>> eval = evaluationTopK(evalPath, topK, cut_off);
+			List<String[]> evalTopK = eval.get(0);
+			List<String[]> evalAvg = eval.get(1);
+
+			String[] avg = evalAvg.get(0);
+			csvWriter.writeNext(new String[] { "0", "0", "0", "0", avg[0], avg[1], avg[2] });
+
+			for (int i = 0; i < evalTopK.size(); i++) {
+				String[] records = evalTopK.get(i);
+				csvWriter.writeNext(records);
+			}
+
 		}
 	}
 
@@ -201,7 +392,29 @@ public class ModelGenerator {
 		jf.setVisible(true);
 		tv.fitToScreen();
 		// save tree to file text
-		try (PrintWriter out = new PrintWriter(treePath+"/tree.dot")) {
+		try (PrintWriter out = new PrintWriter(treePath + "/tree.dot")) {
+			out.println(model.graph());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void showTree(M5P model, String treePath) throws Exception {
+		// display classifier
+		final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: M5P");
+		jf.setSize(500, 400);
+		jf.getContentPane().setLayout(new BorderLayout());
+		TreeVisualizer tv = new TreeVisualizer(null, model.graph(), new PlaceNode2());
+		jf.getContentPane().add(tv, BorderLayout.CENTER);
+		jf.addWindowListener(new java.awt.event.WindowAdapter() {
+			public void windowClosing(java.awt.event.WindowEvent e) {
+				jf.dispose();
+			}
+		});
+		jf.setVisible(true);
+		tv.fitToScreen();
+		// save tree to file text
+		try (PrintWriter out = new PrintWriter(treePath + "/tree.dot")) {
 			out.println(model.graph());
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -209,31 +422,31 @@ public class ModelGenerator {
 	}
 
 	public void convertScoreToLabel(String scorePath, String labelPath, double cut_off) {
-		try (
-				Reader reader = Files.newBufferedReader(Paths.get(scorePath+"/result_score.csv"));				
+		try (Reader reader = Files.newBufferedReader(Paths.get(scorePath + "/result_score.csv"));
 				CSVReader csvReader = new CSVReader(reader);
-				Writer writer = Files.newBufferedWriter(Paths.get(labelPath+"/result_label.csv"));
+				Writer writer = Files.newBufferedWriter(Paths.get(labelPath + "/result_label.csv"));
 				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
-						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);				
-		) {
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
 			// Reading Records One by One in a String array
 			String[] nextRecord;
 			nextRecord = csvReader.readNext();
-			String[] headerRecord = {"Predicted","Actual"};
+			String[] headerRecord = { "Predicted", "Actual" };
 			csvWriter.writeNext(headerRecord);
-			while ((nextRecord = csvReader.readNext()) != null) {				
+			while ((nextRecord = csvReader.readNext()) != null) {
 				String predictedScore = nextRecord[0];
 				String actualScore = nextRecord[1];
 				double pScore = Double.parseDouble(predictedScore);
 				double aScore = Double.parseDouble(actualScore);
 				String predictedLabel = "";
 				String actualLabel = "";
-				if(pScore>=cut_off)				
+				if (pScore >= cut_off)
 					predictedLabel = "1";
-				else predictedLabel = "0";
-				if(aScore>=cut_off)				
+				else
+					predictedLabel = "0";
+				if (aScore >= cut_off)
 					actualLabel = "1";
-				else actualLabel = "0";
+				else
+					actualLabel = "0";
 				csvWriter.writeNext(new String[] { predictedLabel, actualLabel });
 			}
 		} catch (IOException e) {
@@ -241,12 +454,47 @@ public class ModelGenerator {
 		}
 
 	}
-	
-	public List<Double> evaluation(String resultPath)
-	{
+
+	public void convertScoreToLabelWithId(String scorePath, String labelPath, double cut_off) {
+		try (Reader reader = Files.newBufferedReader(Paths.get(scorePath + "/result_Id_score.csv"));
+				CSVReader csvReader = new CSVReader(reader);
+				Writer writer = Files.newBufferedWriter(Paths.get(labelPath + "/result_Id_label.csv"));
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			// Reading Records One by One in a String array
+			String[] nextRecord;
+			nextRecord = csvReader.readNext();
+			String[] headerRecord = { "newsId1", "newsId2", "Predicted", "Actual" };
+			csvWriter.writeNext(headerRecord);
+			while ((nextRecord = csvReader.readNext()) != null) {
+				String newsId1 = nextRecord[0];
+				String newsId2 = nextRecord[1];
+				String predictedScore = nextRecord[2];
+				String actualScore = nextRecord[3];
+				double pScore = Double.parseDouble(predictedScore);
+				double aScore = Double.parseDouble(actualScore);
+				String predictedLabel = "";
+				String actualLabel = "";
+				if (pScore >= cut_off)
+					predictedLabel = "1";
+				else
+					predictedLabel = "0";
+				if (aScore > 0)
+					actualLabel = "1";
+				else
+					actualLabel = "0";
+				csvWriter.writeNext(new String[] { newsId1, newsId2, predictedLabel, actualLabel });
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public List<Double> evaluation(String resultPath) {
 		List<Double> eval = new ArrayList<>();
 		try {
-			Reader reader = Files.newBufferedReader(Paths.get(resultPath+"/result_label.csv"));
+			Reader reader = Files.newBufferedReader(Paths.get(resultPath + "/result_Id_label.csv"));
 			CSVReader csvReader = new CSVReader(reader);
 			// Reading All Records at once into a List<String[]>
 			int TP = 0;
@@ -255,35 +503,35 @@ public class ModelGenerator {
 			int FN = 0;
 			List<String[]> records = csvReader.readAll();
 			for (String[] record : records) {
-			   String predicted = record[0];
-			   String actual = record[1];
-			   if(predicted.equals("1") && actual.equals("1"))			   
-				   TP = TP + 1;			   
-			   if(predicted.equals("1") && actual.equals("0"))			   
-				   FP = FP + 1;
-			   if(predicted.equals("0") && actual.equals("0"))			   
-				   TN = TN + 1;
-			   if(predicted.equals("0") && actual.equals("1"))			   
-				   FN = FN + 1;
+				String predicted = record[2];
+				String actual = record[3];
+				if (predicted.equals("1") && actual.equals("1"))
+					TP = TP + 1;
+				if (predicted.equals("1") && actual.equals("0"))
+					FP = FP + 1;
+				if (predicted.equals("0") && actual.equals("0"))
+					TN = TN + 1;
+				if (predicted.equals("0") && actual.equals("1"))
+					FN = FN + 1;
 			}
-			double accuracy = (double) (TP+TN)/(TP+TN+FP+FN);
-			double precisionP = (double) TP/(TP+FP);
-			double recallP = (double) TP/(TP+FN);
-			double f1P = (double) 2*precisionP*recallP/(precisionP+recallP);
-			
-			double precisionN = (double) TN/(TN+FN);
-			double recallN = (double) TN/(TN+FP);
-			double f1N = (double) 2*precisionN*recallN/(precisionN+recallN);
-			
-			double precisionAvg = (precisionP+precisionN)/2;
-			double recallAvg = (recallP+recallN)/2;
-			double f1Avg = (f1P+f1N)/2;
-			
-			eval.add((double)TP);
-			eval.add((double)FP);
-			eval.add((double)FN);
-			eval.add((double)TN);
-			
+			double accuracy = (double) (TP + TN) / (TP + TN + FP + FN);
+			double precisionP = (double) TP / (TP + FP);
+			double recallP = (double) TP / (TP + FN);
+			double f1P = (double) 2 * precisionP * recallP / (precisionP + recallP);
+
+			double precisionN = (double) TN / (TN + FN);
+			double recallN = (double) TN / (TN + FP);
+			double f1N = (double) 2 * precisionN * recallN / (precisionN + recallN);
+
+			double precisionAvg = (precisionP + precisionN) / 2;
+			double recallAvg = (recallP + recallN) / 2;
+			double f1Avg = (f1P + f1N) / 2;
+
+			eval.add((double) TP);
+			eval.add((double) FP);
+			eval.add((double) FN);
+			eval.add((double) TN);
+
 			eval.add(accuracy);
 			eval.add(precisionP);
 			eval.add(recallP);
@@ -291,62 +539,156 @@ public class ModelGenerator {
 			eval.add(precisionN);
 			eval.add(recallN);
 			eval.add(f1N);
-			
+
 			eval.add(precisionAvg);
 			eval.add(recallAvg);
 			eval.add(f1Avg);
-			
-		} catch (IOException e) {			
+
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return eval;
 	}
-	
-	public void createTrainAndTestDataset(String dataPath, String outPath) throws Exception
-	{
+
+	public List<List<String[]>> evaluationTopK(String resultPath, int topK, double threshold) throws IOException {
+		HashMap<String, List<Instance>> sortedResult = sortResultByAttribute(resultPath + "/result_Id_score.csv", 2);
+		saveSortedResult(resultPath, sortedResult);
+
+		List<String[]> listEvalTopK = new ArrayList<>();
+		List<String[]> listEvalAvg = new ArrayList<>();
+
+		double avgPrecision = 0;
+		double avgRecall = 0;
+		double avgF1 = 0;
+		int nPositive = 0;
+
+		for (String newsId1 : sortedResult.keySet()) {
+			List<Instance> records = sortedResult.get(newsId1);
+			int predictPositive = 0;
+			int maxIndex = topK;
+			if (topK > records.size())
+				maxIndex = records.size();
+			int actualPositive = 0;
+			int truePositive = 0;
+
+			for (int i = 0; i < maxIndex; i++) {
+				Instance record = records.get(i);
+				double predictScore = record.value(2);
+				if (predictScore >= threshold)
+					predictPositive = predictPositive + 1;
+			}
+
+			for (int i = 0; i < records.size(); i++) {
+				Instance record = records.get(i);
+				double actualScore = record.value(3);
+				if (actualScore > 0)
+					actualPositive = actualPositive + 1;
+				if (actualScore > 0 && i < predictPositive)
+					truePositive = truePositive + 1;
+			}
+
+			double precisionTopK = 0;
+			if (predictPositive > 0)
+				precisionTopK = (double) truePositive / predictPositive;
+
+			double recallTopK = 0;
+			if (actualPositive > 0)
+				recallTopK = (double) truePositive / actualPositive;
+
+			double f1TopK = 0;
+			if (precisionTopK > 0 && recallTopK > 0)
+				f1TopK = 2 * precisionTopK * recallTopK / (precisionTopK + recallTopK);
+
+			String[] evalTopK = new String[] { newsId1, Double.toString(predictPositive),
+					Double.toString(actualPositive), Double.toString(truePositive), Double.toString(precisionTopK),
+					Double.toString(recallTopK), Double.toString(f1TopK) };
+			listEvalTopK.add(evalTopK);
+
+			if (actualPositive > 0 || predictPositive > 0) {
+				avgPrecision = avgPrecision + precisionTopK;
+				avgRecall = avgRecall + recallTopK;
+				avgF1 = avgF1 + f1TopK;
+				nPositive = nPositive + 1;
+			}
+		}
+
+		avgPrecision = avgPrecision / nPositive;
+		avgRecall = avgRecall / nPositive;
+		avgF1 = avgF1 / nPositive;
+
+		listEvalAvg.add(
+				new String[] { Double.toString(avgPrecision), Double.toString(avgRecall), Double.toString(avgF1) });
+
+		List<List<String[]>> listEval = new ArrayList<>();
+		listEval.add(listEvalTopK);
+		listEval.add(listEvalAvg);
+		return listEval;
+	}
+
+	public void createTrainAndTestDataset(String dataPath, String outPath) throws Exception {
 		long startTime;
 		long endTime;
 		long totalTime;
-		
-		Instances originalData = loadDataset(dataPath);
+
+		Instances originalData = loadDatasetWithId(dataPath);
+
+		// Preprocess data
+		System.out.println("Preprocessing ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		Preporcess prep = new Preporcess();
+		Instances preprocessedData = prep.Numeric2Nominal(originalData, "1,2");
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+
 		// divide dataset to train dataset 60% and test dataset 40%
-		int trainSize = (int) Math.round(originalData.numInstances() * 0.6);
-		int testSize = originalData.numInstances() - trainSize;
-		
-		originalData.randomize(new Debug.Random(1));
+		int trainSize = (int) Math.round(preprocessedData.numInstances() * 0.6);
+		int testSize = preprocessedData.numInstances() - trainSize;
+
+		preprocessedData.randomize(new Debug.Random(1));
 
 		System.out.println("Deviding dataset ...");
 		startTime = System.currentTimeMillis();
-		//-------------------------------------------//
-		Instances traindataset = new Instances(originalData, 0, trainSize);
-		Instances testdataset = new Instances(originalData, trainSize, testSize);
-		//-------------------------------------------//
+		// -------------------------------------------//
+		Instances traindataset = new Instances(preprocessedData, 0, trainSize);
+		Instances testdataset = new Instances(preprocessedData, trainSize, testSize);
+		// -------------------------------------------//
 		endTime = System.currentTimeMillis();
-		totalTime = endTime-startTime;
-		System.out.println("done "+totalTime/1000+" s");
-		
-		CSVSaver saverTrain = new CSVSaver();		
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+
+		CSVSaver saverTrain = new CSVSaver();
 		saverTrain.setInstances(traindataset);
-		saverTrain.setFile(new File(outPath+"/Train.csv"));
+		saverTrain.setFile(new File(outPath + "/Train_graph_ne.csv"));
 		saverTrain.setNoHeaderRow(false);
 		saverTrain.writeBatch();
-		
-		CSVSaver saverTest = new CSVSaver();		
+
+		CSVSaver saverTest = new CSVSaver();
 		saverTest.setInstances(testdataset);
-		saverTest.setFile(new File(outPath+"/Test.csv"));
+		saverTest.setFile(new File(outPath + "/Test_graph_ne.csv"));
 		saverTest.setNoHeaderRow(false);
 		saverTest.writeBatch();
 	}
-	
-	public static void main(String[] args) throws Exception {
 
+	public static void main(String[] args) throws Exception {
 		ModelGenerator mg = new ModelGenerator();
-		TextDirectoryLoader loader = new TextDirectoryLoader();
-		String[] option = new String[2];
-		option[0] = "-dir";
-		option[1] = "E:/Now/relevant_news/test";
-		loader.setOptions(option);
-		System.out.println(loader.getDataSet());
+		System.out.println("Start");
+		// Chia du lieu Train va Test
+		// String dataPath =
+		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/features_ne.csv";
+		// String outPath =
+		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/Train_Test";
+		// mg.createTrainAndTestDataset(dataPath, outPath);
+		// ----//
+		// Danh gia TF-IDF
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/data/result_tfidf/30_08_2018/ne";
+		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, 0.01);
+		mg.saveEvaluationNoTime(RESULTPATH);
+		mg.saveEvaluationTopK(RESULTPATH, 10, 0.01);
+		// ----//
+		System.out.println("(((o(*ﾟ▽ﾟ*)o)))");
 
 	}
 
