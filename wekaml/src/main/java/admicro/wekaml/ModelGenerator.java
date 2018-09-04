@@ -152,7 +152,8 @@ public class ModelGenerator {
 		// m5p.setUseUnsmoothed(false);
 
 		/*
-		 * unpruned -- Whether unpruned tree/rules are to be generated (default = false).
+		 * unpruned -- Whether unpruned tree/rules are to be generated (default
+		 * = false).
 		 * 
 		 * numDecimalPlaces -- The number of decimal places to be used for the
 		 * output of numbers in the model (default = 2).
@@ -165,7 +166,8 @@ public class ModelGenerator {
 		 * debug -- If set to true, classifier may output additional info to the
 		 * console (default = false).
 		 * 
-		 * useUnsmoothed -- Whether to use unsmoothed predictions (default = false).
+		 * useUnsmoothed -- Whether to use unsmoothed predictions (default =
+		 * false).
 		 * 
 		 * saveInstances -- Whether to save instance data at each node in the
 		 * tree for visualization purposes (default = false).
@@ -181,7 +183,7 @@ public class ModelGenerator {
 		 * instead of a model tree/rule (default = false).
 		 * 
 		 */
-		
+
 		try {
 			m5p.buildClassifier(traindataset);
 
@@ -221,7 +223,7 @@ public class ModelGenerator {
 		}
 		return model;
 	}
-	
+
 	public Classifier loadModelM5P(String modelpath) {
 		M5P model = new M5P();
 		try {
@@ -398,7 +400,7 @@ public class ModelGenerator {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void showTree(M5P model, String treePath) throws Exception {
 		// display classifier
 		final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: M5P");
@@ -550,7 +552,7 @@ public class ModelGenerator {
 		return eval;
 	}
 
-	public List<List<String[]>> evaluationTopK(String resultPath, int topK, double threshold) throws IOException {
+	public List<List<String[]>> evaluationTopK(String resultPath, int topK, double cut_off) throws IOException {
 		HashMap<String, List<Instance>> sortedResult = sortResultByAttribute(resultPath + "/result_Id_score.csv", 2);
 		saveSortedResult(resultPath, sortedResult);
 
@@ -574,7 +576,7 @@ public class ModelGenerator {
 			for (int i = 0; i < maxIndex; i++) {
 				Instance record = records.get(i);
 				double predictScore = record.value(2);
-				if (predictScore >= threshold)
+				if (predictScore >= cut_off)
 					predictPositive = predictPositive + 1;
 			}
 
@@ -661,13 +663,13 @@ public class ModelGenerator {
 
 		CSVSaver saverTrain = new CSVSaver();
 		saverTrain.setInstances(traindataset);
-		saverTrain.setFile(new File(outPath + "/Train_graph_ne.csv"));
+		saverTrain.setFile(new File(outPath + "/Train_graph_ne_3000.csv"));
 		saverTrain.setNoHeaderRow(false);
 		saverTrain.writeBatch();
 
 		CSVSaver saverTest = new CSVSaver();
 		saverTest.setInstances(testdataset);
-		saverTest.setFile(new File(outPath + "/Test_graph_ne.csv"));
+		saverTest.setFile(new File(outPath + "/Test_graph_ne_3000.csv"));
 		saverTest.setNoHeaderRow(false);
 		saverTest.writeBatch();
 	}
@@ -677,16 +679,16 @@ public class ModelGenerator {
 		System.out.println("Start");
 		// Chia du lieu Train va Test
 		// String dataPath =
-		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/features_ne.csv";
+		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/features_ne_3000.csv";
 		// String outPath =
-		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/Train_Test";
+		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test";
 		// mg.createTrainAndTestDataset(dataPath, outPath);
 		// ----//
 		// Danh gia TF-IDF
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/data/result_tfidf/30_08_2018/ne";
-		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, 0.01);
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/topic";
+		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, 0);
 		mg.saveEvaluationNoTime(RESULTPATH);
-		mg.saveEvaluationTopK(RESULTPATH, 10, 0.01);
+		mg.saveEvaluationTopK(RESULTPATH, 10, 0);
 		// ----//
 		System.out.println("(((o(*ﾟ▽ﾟ*)o)))");
 

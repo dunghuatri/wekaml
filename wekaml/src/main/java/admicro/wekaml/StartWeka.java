@@ -36,11 +36,12 @@ public class StartWeka {
 	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_event.csv";
 //	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_topic.csv";
 //	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_ne.csv";
-	public static String MODElPATH = "model/REPTree_model.bin";
+//	public static String MODElPATH = "model/REPTree_model.bin";
+	public static String MODElPATH = "model/M5P_model.bin";
 	public static String RESULTPATH = "result";
 	public static String EVALPATH = "result";
 	public static String TREEPATH = "result";
-	public double cut_off = 0.3;
+	public double cut_off = 0;
 	
 	public static void runWeka() throws Exception
 	{
@@ -486,8 +487,10 @@ public class StartWeka {
 	{
 		StartWeka wk = new StartWeka();
 		System.out.println("Training REPTree...");
-		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/Train_Test/Train_graph_ne.csv";
-		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/Train_Test/Test_graph_ne.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_ne.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_ne.csv";
+		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Train_graph_ne_3000.csv";
+		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Test_graph_ne_3000.csv";
 		wk.trainREPTree(trainDataPath);
 		System.out.println("Testing REPTree...");
 		wk.testREPTree(MODElPATH, trainDataPath, testDataPath);
@@ -497,8 +500,10 @@ public class StartWeka {
 	{
 		StartWeka wk = new StartWeka();
 		System.out.println("Training M5P...");
-		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/Train_Test/Train_graph_event.csv";
-		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_30_08_2018/Train_Test/Test_graph_event.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_topic.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_topic.csv";
+		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Train_graph_topic_3000.csv";
+		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Test_graph_topic_3000.csv";
 		wk.trainM5P(trainDataPath);
 		System.out.println("Testing M5P...");
 		wk.testM5P(MODElPATH, trainDataPath, testDataPath);
