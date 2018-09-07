@@ -306,9 +306,11 @@ public class ModelGenerator {
 		return sortedResult;
 	}
 
-	public void saveEvaluation(Evaluation eval, String evalPath) {
+	public void saveEvaluation(Evaluation eval, HashMap<String, List<Instance>> sortedResult, String evalPath) {
 		try (PrintWriter out = new PrintWriter(evalPath + "/eval.txt")) {
 			out.println("Time: " + eval.totalCost() + "\n" + eval.toSummaryString());
+			out.println("MRR: " + calculateMRR(sortedResult));
+			out.println();
 			try {
 				// out.println(eval.toClassDetailsString());
 				List<Double> eval2 = evaluation(evalPath);
@@ -331,10 +333,12 @@ public class ModelGenerator {
 		}
 	}
 
-	public void saveEvaluationNoTime(String evalPath) {
+	public void saveEvaluationNoTime(String evalPath, HashMap<String, List<Instance>> sortedResult) {
 		try (PrintWriter out = new PrintWriter(evalPath + "/eval.txt")) {
 			try {
 				// out.println(eval.toClassDetailsString());
+				out.println("MRR: " + calculateMRR(sortedResult));
+				out.println();
 				List<Double> eval2 = evaluation(evalPath);
 				out.print("TP = " + eval2.get(0) + "\t");
 				out.println("FP = " + eval2.get(1));
@@ -355,7 +359,8 @@ public class ModelGenerator {
 		}
 	}
 
-	public void saveEvaluationTopK(String evalPath, int topK, double cut_off) throws IOException {
+	public void saveEvaluationTopK(String evalPath, HashMap<String, List<Instance>> sortedResult, int topK,
+			double cut_off) throws IOException {
 		try (Writer writer = Files.newBufferedWriter(Paths.get(evalPath + "/evalTopK.csv"));
 
 				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
@@ -364,7 +369,7 @@ public class ModelGenerator {
 					"Recall", "F1" };
 			csvWriter.writeNext(headerRecord);
 
-			List<List<String[]>> eval = evaluationTopK(evalPath, topK, cut_off);
+			List<List<String[]>> eval = evaluationTopK(sortedResult, topK, cut_off);
 			List<String[]> evalTopK = eval.get(0);
 			List<String[]> evalAvg = eval.get(1);
 
@@ -376,6 +381,25 @@ public class ModelGenerator {
 				csvWriter.writeNext(records);
 			}
 
+		}
+	}
+
+	public void saveNDCGTopK(String evalPath, HashMap<String, List<Instance>> sortedResultByPredictedScore,
+			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off) throws IOException {
+		try (Writer writer = Files.newBufferedWriter(Paths.get(evalPath + "/NDCGTopK.csv"));
+
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "newsId", "NDCG" };
+			csvWriter.writeNext(headerRecord);
+
+			List<String[]> listNDCGTopK = calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore,
+					topK, cut_off);
+
+			for (int i = 0; i < listNDCGTopK.size(); i++) {
+				String[] records = listNDCGTopK.get(i);
+				csvWriter.writeNext(records);
+			}
 		}
 	}
 
@@ -552,10 +576,66 @@ public class ModelGenerator {
 		return eval;
 	}
 
-	public List<List<String[]>> evaluationTopK(String resultPath, int topK, double cut_off) throws IOException {
-		HashMap<String, List<Instance>> sortedResult = sortResultByAttribute(resultPath + "/result_Id_score.csv", 2);
-		saveSortedResult(resultPath, sortedResult);
+	public double calculateMRR(HashMap<String, List<Instance>> sortedResult) {
+		double mrrScore = 0;
+		for (String newsId1 : sortedResult.keySet()) {
+			List<Instance> records = sortedResult.get(newsId1);
+			double rr = 0;
+			for (int i = 0; i < records.size(); i++) {
+				Instance record = records.get(i);
+				double actualScore = record.value(3);
+				if (actualScore > 0) {
+					rr = (double) 1 / (i + 1);
+					break;
+				}
+			}
+			mrrScore = mrrScore + rr;
+		}
+		mrrScore = mrrScore / sortedResult.size();
+		return mrrScore;
+	}
 
+	public List<String[]> calculateNDCGTopK(HashMap<String, List<Instance>> sortedResultByPredictedScore,
+			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off) throws IOException {
+		List<String[]> listNDCGTopK = new ArrayList<>();
+
+		for (String newsId1 : sortedResultByPredictedScore.keySet()) {
+			List<Instance> recordsDCG = sortedResultByPredictedScore.get(newsId1);
+			List<Instance> recordsIDCG = sortedResultByActualScore.get(newsId1);
+			int maxIndex = topK;
+			double dcgp = 0;
+			double idcgp = 0;
+			double ndcgp = 0;
+
+			if (topK > recordsDCG.size())
+				maxIndex = recordsDCG.size();
+
+			// Tinh DCGp
+			for (int i = 0; i < maxIndex; i++) {
+				Instance record = recordsDCG.get(i);
+				double reli = record.value(3);
+				double dcg = reli / (Math.log(i + 2) / Math.log(2));
+				dcgp = dcgp + dcg;
+			}
+			// Tinh iDCGp
+			for (int i = 0; i < maxIndex; i++) {
+				Instance record = recordsIDCG.get(i);
+				double reli = record.value(3);
+				double idcg = reli / (Math.log(i + 2) / Math.log(2));
+				idcgp = idcgp + idcg;
+			}
+			// Tinh nDCGp
+			if (dcgp == 0)
+				ndcgp = 0;
+			else
+				ndcgp = dcgp / idcgp;
+			listNDCGTopK.add(new String[] { newsId1, Double.toString(ndcgp) });
+		}
+		return listNDCGTopK;
+	}
+
+	public List<List<String[]>> evaluationTopK(HashMap<String, List<Instance>> sortedResult, int topK, double cut_off)
+			throws IOException {
 		List<String[]> listEvalTopK = new ArrayList<>();
 		List<String[]> listEvalAvg = new ArrayList<>();
 
@@ -663,15 +743,119 @@ public class ModelGenerator {
 
 		CSVSaver saverTrain = new CSVSaver();
 		saverTrain.setInstances(traindataset);
-		saverTrain.setFile(new File(outPath + "/Train_graph_ne_3000.csv"));
+		saverTrain.setFile(new File(outPath + "/Train_graph_ne_1992.csv"));
 		saverTrain.setNoHeaderRow(false);
 		saverTrain.writeBatch();
 
 		CSVSaver saverTest = new CSVSaver();
 		saverTest.setInstances(testdataset);
-		saverTest.setFile(new File(outPath + "/Test_graph_ne_3000.csv"));
+		saverTest.setFile(new File(outPath + "/Test_graph_ne_1992.csv"));
 		saverTest.setNoHeaderRow(false);
 		saverTest.writeBatch();
+	}
+
+	/**
+	 * JUST FOR TESTING CODE
+	 * 
+	 * @throws IOException
+	 */
+	public static void testL2R() throws IOException {
+		// Danh gia Learning to rank
+		ModelGenerator mg = new ModelGenerator();
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset1/event";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset1/topic";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset1/ne";
+
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset2/event";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset2/topic";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset2/ne";
+
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset3/event";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset3/topic";
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset3/ne";
+		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, 0);
+
+		// Sort result
+		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 2);
+		mg.saveSortedResult(RESULTPATH, sortedResultByPredictedScore);
+		HashMap<String, List<Instance>> sortedResultByActualScore = mg
+				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 3);
+
+		mg.saveEvaluationNoTime(RESULTPATH, sortedResultByPredictedScore);
+		mg.saveEvaluationTopK(RESULTPATH, sortedResultByPredictedScore, 2, 0);
+		mg.saveNDCGTopK(RESULTPATH, sortedResultByPredictedScore, sortedResultByActualScore, 2, 0);
+		// ----//
+	}
+
+	/**
+	 * JUST FOR TESTING CODE
+	 * 
+	 * @throws IOException
+	 */
+	public static void testTFIDF() throws IOException {
+		// Danh gia TF-IDF
+		ModelGenerator mg = new ModelGenerator();
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset1/TFIDF1/event";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset1/TFIDF1/topic";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset1/TFIDF1/ne";
+
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/event";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/topic";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/ne";
+
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset3/TFIDF3/event";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset3/TFIDF3/topic";
+		// String RESULTPATH =
+		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset3/TFIDF3/ne";
+
+		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, 0);
+
+		// Sort result
+		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 2);
+		mg.saveSortedResult(RESULTPATH, sortedResultByPredictedScore);
+		HashMap<String, List<Instance>> sortedResultByActualScore = mg
+				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 3);
+
+		mg.saveEvaluationNoTime(RESULTPATH, sortedResultByPredictedScore);
+		mg.saveEvaluationTopK(RESULTPATH, sortedResultByPredictedScore, 2, 0);
+		mg.saveNDCGTopK(RESULTPATH, sortedResultByPredictedScore, sortedResultByActualScore, 2, 0);
+		// ----//
+	}
+
+	/**
+	 * JUST FOR TESTING CODE
+	 * 
+	 * @throws IOException
+	 */
+	public static void testNDCG() throws IOException {
+		ModelGenerator mg = new ModelGenerator();
+		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+				.sortResultByAttribute("C:/Users/ADMIN/Desktop/testNDCG.csv", 2);
+		HashMap<String, List<Instance>> sortedResultByActualScore = mg
+				.sortResultByAttribute("C:/Users/ADMIN/Desktop/testNDCG.csv", 3);
+		List<String[]> listResult = mg.calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore, 10,
+				0);
+		for (int i = 0; i < listResult.size(); i++) {
+			System.out.println(listResult.get(i)[0] + "-->" + listResult.get(i)[1]);
+		}
+
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -679,17 +863,22 @@ public class ModelGenerator {
 		System.out.println("Start");
 		// Chia du lieu Train va Test
 		// String dataPath =
-		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/features_ne_3000.csv";
+		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/features_ne_1992.csv";
 		// String outPath =
-		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test";
+		// "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test";
 		// mg.createTrainAndTestDataset(dataPath, outPath);
 		// ----//
-		// Danh gia TF-IDF
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/topic";
-		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, 0);
-		mg.saveEvaluationNoTime(RESULTPATH);
-		mg.saveEvaluationTopK(RESULTPATH, 10, 0);
+
+		// Test MRR
+		// HashMap<String, List<Instance>> sortedResult =
+		// mg.sortResultByAttribute("C:/Users/ADMIN/Desktop/testMRR.csv", 2);
+		// System.out.println(mg.calculateMRR(sortedResult));
 		// ----//
+
+		// testL2R();
+
+		// testNDCG();
+
 		System.out.println("(((o(*ﾟ▽ﾟ*)o)))");
 
 	}
