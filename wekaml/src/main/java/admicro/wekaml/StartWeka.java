@@ -34,17 +34,18 @@ import weka.filters.unsupervised.attribute.Normalize;
 
 public class StartWeka {
 
-//	public static final String DATASETPATH = "data/iris.2D.arff";
-//	public static final String DATASETPATH = "data/heart.csv";
-	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_event.csv";
-//	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_topic.csv";
-//	public static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_ne.csv";
-	public static String MODElPATH = "model/REPTree_model.bin";
-//	public static String MODElPATH = "model/M5P_model.bin";
-	public static String RESULTPATH = "result";
-	public static String EVALPATH = "result";
-	public static String TREEPATH = "result";
-	public double cut_off = 0;
+//	private static final String DATASETPATH = "data/iris.2D.arff";
+//	private static final String DATASETPATH = "data/heart.csv";
+	private static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_event.csv";
+//	private static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_topic.csv";
+//	private static String DATASETPATH = "C:/Users/ADMIN/Desktop/Demo/data/features_graph_ne.csv";
+//	private static String MODElPATH = "model/REPTree_model_ne.bin";
+	private static String MODElPATH = "model/M5P_model_ne.bin";
+	private static String RESULTPATH = "result";
+	private static String EVALPATH = "result";
+	private static String TREEPATH = "result";
+	private double cut_off = 0;
+	private int topK = 2;
 	
 	public static void runWeka() throws Exception
 	{
@@ -161,7 +162,7 @@ public class StartWeka {
 		//Sort result
 		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
 		mg.saveSortedResult(EVALPATH, sortedResult);
-		mg.saveEvaluation(eval, sortedResult, EVALPATH);
+		mg.saveEvaluation(eval, sortedResult, EVALPATH,RESULTPATH+"/result_Id_label.csv");
 		//-------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime-startTime;
@@ -384,8 +385,8 @@ public class StartWeka {
 		System.out.println("Saving results ...");
 		startTime = System.currentTimeMillis();
 		//-------------------------------------------//
-		mg.savePredictedWithId(testData, eval, RESULTPATH);	
-		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, cut_off);
+		mg.savePredictedWithId(testData, eval, RESULTPATH+"/result_Id_score.csv");	
+		mg.convertScoreToLabelWithId(RESULTPATH+"/result_Id_score.csv", RESULTPATH+"/result_Id_label.csv", cut_off);
 		//-------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime-startTime;
@@ -397,12 +398,16 @@ public class StartWeka {
 		//-------------------------------------------//		
 		//Sort result
 		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(EVALPATH, sortedResultByPredictedScore);
+		mg.saveSortedResult(EVALPATH+"/result_Id_score_sorted.csv", sortedResultByPredictedScore);
 		HashMap<String, List<Instance>> sortedResultByActualScore = mg.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 3);
 		
-		mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH);
-		mg.saveEvaluationTopK(EVALPATH, sortedResultByPredictedScore,2,cut_off);
-		mg.saveNDCGTopK(EVALPATH, sortedResultByPredictedScore, sortedResultByActualScore, 2, cut_off);
+		mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH+"/eval.txt", RESULTPATH+"/result_Id_label.csv");
+		for(int k=2;k<=20;k=k+2)
+		{
+			topK = k;
+			mg.saveEvaluationTopK(EVALPATH+"/evalTopK_"+Integer.toString(topK)+".csv", sortedResultByPredictedScore,topK,cut_off);
+			mg.saveNDCGTopK(EVALPATH+"/NDCGTopK"+Integer.toString(topK)+".csv", sortedResultByPredictedScore, sortedResultByActualScore, topK, cut_off);
+		}		
 		//-------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime-startTime;
@@ -476,8 +481,8 @@ public class StartWeka {
 		System.out.println("Saving results ...");
 		startTime = System.currentTimeMillis();
 		//-------------------------------------------//
-		mg.savePredictedWithId(testData, eval, RESULTPATH);	
-		mg.convertScoreToLabelWithId(RESULTPATH, RESULTPATH, cut_off);
+		mg.savePredictedWithId(testData, eval, RESULTPATH+"/result_Id_score.csv");	
+		mg.convertScoreToLabelWithId(RESULTPATH+"/result_Id_score.csv", RESULTPATH+"/result_Id_label.csv", cut_off);
 		//-------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime-startTime;
@@ -489,12 +494,16 @@ public class StartWeka {
 		//-------------------------------------------//		
 		//Sort result
 		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(EVALPATH, sortedResultByPredictedScore);
+		mg.saveSortedResult(EVALPATH+"/result_Id_score_sorted.csv", sortedResultByPredictedScore);
 		HashMap<String, List<Instance>> sortedResultByActualScore = mg.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 3);
 		
-		mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH);
-		mg.saveEvaluationTopK(EVALPATH, sortedResultByPredictedScore,2,cut_off);
-		mg.saveNDCGTopK(EVALPATH, sortedResultByPredictedScore, sortedResultByActualScore, 2, cut_off);
+		mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH+"/eval.txt", RESULTPATH+"/result_Id_label.csv");
+		for(int k=2;k<=20;k=k+2)
+		{
+			topK = k;
+			mg.saveEvaluationTopK(EVALPATH+"/evalTopK_"+Integer.toString(topK)+".csv", sortedResultByPredictedScore,topK,cut_off);
+			mg.saveNDCGTopK(EVALPATH+"/NDCGTopK"+Integer.toString(topK)+".csv", sortedResultByPredictedScore, sortedResultByActualScore, topK, cut_off);
+		}	
 		//-------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime-startTime;
@@ -505,15 +514,15 @@ public class StartWeka {
 	{
 		StartWeka wk = new StartWeka();
 		System.out.println("Training REPTree...");
-//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_event.csv";
-//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_event.csv";
-//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_topic.csv";
-//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_topic.csv";
-//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_ne.csv";
-//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_ne.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test_9_1/Train_event_9.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Test_full_matrix/features_event_fullMatrix.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test_9_1/Train_topic_9.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Test_full_matrix/features_topic_fullMatrix.csv";
+		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test_9_1/Train_ne_9.csv";
+		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Test_full_matrix/features_ne_fullMatrix.csv";
 		
-		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Train_graph_event_3000.csv";
-		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Test_graph_event_3000.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Train_graph_event_3000.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Test_graph_event_3000.csv";
 //		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Train_graph_topic_3000.csv";
 //		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Test_graph_topic_3000.csv";
 //		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Train_graph_ne_3000.csv";
@@ -535,12 +544,12 @@ public class StartWeka {
 	{
 		StartWeka wk = new StartWeka();
 		System.out.println("Training M5P...");
-//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_event.csv";
-//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_event.csv";
-//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_topic.csv";
-//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_topic.csv";
-//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Train_graph_ne.csv";
-//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test/Test_graph_ne.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test_9_1/Train_event_9.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Test_full_matrix/features_event_fullMatrix.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test_9_1/Train_topic_9.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Test_full_matrix/features_topic_fullMatrix.csv";
+		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Train_Test_9_1/Train_ne_9.csv";
+		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset1/Test_full_matrix/features_ne_fullMatrix.csv";
 		
 //		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Train_graph_event_3000.csv";
 //		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset2/Train_Test/Test_graph_event_3000.csv";
@@ -553,8 +562,8 @@ public class StartWeka {
 //		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test/Test_graph_event_1992.csv";
 //		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test/Train_graph_topic_1992.csv";
 //		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test/Test_graph_topic_1992.csv";
-		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test/Train_graph_ne_1992.csv";
-		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test/Test_graph_ne_1992.csv";
+//		String trainDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test/Train_graph_ne_1992.csv";
+//		String testDataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test/Test_graph_ne_1992.csv";
 		
 		wk.trainM5P(trainDataPath);
 		System.out.println("Testing M5P...");
@@ -582,8 +591,8 @@ public class StartWeka {
 //		EVALPATH = args[3];
 //		TREEPATH = args[4];
 //		runWeka();
-		runREPTree();
-//		runM5P();
+//		runREPTree();
+		runM5P();
 		System.out.println("Done!");
 	}
 

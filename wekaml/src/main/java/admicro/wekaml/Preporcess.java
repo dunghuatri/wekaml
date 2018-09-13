@@ -46,6 +46,13 @@ public class Preporcess {
         return newData;        
 	}
 	
+	/**
+	 * Implement remove features function in weka
+	 * @param originalData
+	 * @param range
+	 * @return
+	 * @throws Exception
+	 */
 	public Instances removeFeatures(Instances originalData, String range) throws Exception
 	{
 		Remove remove = new Remove();
@@ -61,6 +68,12 @@ public class Preporcess {
         return newData;
 	}
 	
+	/**
+	 * Implement convert csv to arff function in weka
+	 * @param csvFilePath
+	 * @param arffFilePath
+	 * @throws IOException
+	 */
 	public void CSVToArff(String csvFilePath, String arffFilePath) throws IOException
 	{
 		 // load CSV
