@@ -17,7 +17,7 @@ public class ModelGeneratorTest extends TestCase {
 	public void testCalculateMRR() {		
 		ModelGenerator mg = new ModelGenerator();
 		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv", 2);		
-		double actual = mg.calculateMRR(sortedResult);		
+		double actual = mg.calculateMRR(sortedResult,100);		
 		double expected = 0.611111111111111;
 		assertEquals(expected, actual);		
 	}
@@ -25,8 +25,8 @@ public class ModelGeneratorTest extends TestCase {
 	public void testCalculateRMSE() {
 		ModelGenerator mg = new ModelGenerator();
 		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv", 2);
-		double actual = mg.calculateRMSE(sortedResult);
-		double expected = 1.9148542155126762;
+		double actual = mg.calculateRMSE(sortedResult,100);		
+		double expected = 0.6454972243679028;
 		assertEquals(expected, actual);
 	}
 

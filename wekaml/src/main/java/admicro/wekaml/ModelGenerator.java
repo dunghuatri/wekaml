@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,7 +22,6 @@ import com.opencsv.CSVWriter;
 import weka.classifiers.Classifier;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.evaluation.Prediction;
-import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.trees.M5P;
 import weka.classifiers.trees.REPTree;
 import weka.core.Debug;
@@ -31,9 +31,6 @@ import weka.core.SerializationHelper;
 import weka.core.converters.CSVLoader;
 import weka.core.converters.CSVSaver;
 import weka.core.converters.ConverterUtils.DataSource;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.Normalize;
-import weka.core.converters.TextDirectoryLoader;
 import weka.gui.treevisualizer.PlaceNode2;
 import weka.gui.treevisualizer.TreeVisualizer;
 
@@ -41,6 +38,7 @@ public class ModelGenerator {
 
 	/**
 	 * Load data from file
+	 * 
 	 * @param path
 	 * @return
 	 */
@@ -60,8 +58,9 @@ public class ModelGenerator {
 	}
 
 	/**
-	 * Load data from file
-	 * The Id field in the file is treated as the norminal type to avoid rounding the number automatically in weka.
+	 * Load data from file The Id field in the file is treated as the norminal
+	 * type to avoid rounding the number automatically in weka.
+	 * 
 	 * @param path
 	 * @return
 	 */
@@ -87,6 +86,7 @@ public class ModelGenerator {
 
 	/**
 	 * Build model REPTree
+	 * 
 	 * @param traindataset
 	 * @return
 	 */
@@ -156,6 +156,7 @@ public class ModelGenerator {
 
 	/**
 	 * Build model M5P
+	 * 
 	 * @param traindataset
 	 * @return
 	 */
@@ -216,6 +217,7 @@ public class ModelGenerator {
 
 	/**
 	 * Model evaluation in weka
+	 * 
 	 * @param model
 	 * @param traindataset
 	 * @param testdataset
@@ -235,11 +237,13 @@ public class ModelGenerator {
 
 	/**
 	 * Save model to file
+	 * 
 	 * @param model
 	 * @param modelpath
 	 */
 	public void saveModel(Classifier model, String modelpath) {
-
+		File file = new File(modelpath);		
+		file.getParentFile().mkdirs();
 		try {
 			SerializationHelper.write(modelpath, model);
 		} catch (Exception ex) {
@@ -249,6 +253,7 @@ public class ModelGenerator {
 
 	/**
 	 * Load REPTree pretrained model from file.
+	 * 
 	 * @param modelpath
 	 * @return
 	 */
@@ -264,6 +269,7 @@ public class ModelGenerator {
 
 	/**
 	 * Load M5P pretrained model from file.
+	 * 
 	 * @param modelpath
 	 * @return
 	 */
@@ -279,6 +285,7 @@ public class ModelGenerator {
 
 	/**
 	 * Save predicted result
+	 * 
 	 * @param eval
 	 * @param predictedPath
 	 * @throws IOException
@@ -301,12 +308,15 @@ public class ModelGenerator {
 
 	/**
 	 * Save predicted result with Id field
+	 * 
 	 * @param testData
 	 * @param eval
 	 * @param predictedPath
 	 * @throws IOException
 	 */
 	public void savePredictedWithId(Instances testData, Evaluation eval, String predictedPath) throws IOException {
+		File file = new File(predictedPath);		
+		file.getParentFile().mkdirs();
 		try (Writer writer = Files.newBufferedWriter(Paths.get(predictedPath));
 
 				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
@@ -324,6 +334,7 @@ public class ModelGenerator {
 
 	/**
 	 * Save sorted result
+	 * 
 	 * @param resultPath
 	 * @param sortedResult
 	 * @throws IOException
@@ -331,6 +342,8 @@ public class ModelGenerator {
 	public void saveSortedResult(String resultPath, HashMap<String, List<Instance>> sortedResult) throws IOException {
 		// HashMap<String, List<Instance>> sortedResult =
 		// sortResultByAttribute(resultPath+"/result_Id_score.csv",2);
+		File file = new File(resultPath);
+		file.getParentFile().mkdirs();
 		try (Writer writer = Files.newBufferedWriter(Paths.get(resultPath));
 
 				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
@@ -352,6 +365,7 @@ public class ModelGenerator {
 
 	/**
 	 * Sort results by an attribute (field)
+	 * 
 	 * @param resultPath
 	 * @param attIndex
 	 * @return
@@ -376,16 +390,25 @@ public class ModelGenerator {
 
 	/**
 	 * Save evaluation to file
+	 * 
 	 * @param eval
 	 * @param sortedResult
 	 * @param evalPath
 	 * @param resultPath
 	 */
-	public void saveEvaluation(Evaluation eval, HashMap<String, List<Instance>> sortedResult, String evalPath, String resultPath) {
+	public void saveEvaluation(Evaluation eval, HashMap<String, List<Instance>> sortedResult, String evalPath,
+			String resultPath, int topK, HashMap<Integer, List<String>> listResultTopK) {
+		File file = new File(evalPath);
+		file.getParentFile().mkdirs();
 		try (PrintWriter out = new PrintWriter(evalPath)) {
 			out.println("Time: " + eval.totalCost() + "\n" + eval.toSummaryString());
-			out.println("MRR: " + calculateMRR(sortedResult));
-			out.println("RMSE: " + calculateRMSE(sortedResult));
+			out.println("TopK" + "\t" + "MRR" + "\t" + "RMSE");
+			double mrrScore = calculateMRR(sortedResult, topK);
+			double rmseScore = calculateRMSE(sortedResult, topK);
+			out.println(topK + "," + mrrScore + "," + rmseScore);
+			listResultTopK.get(topK).add(Double.toString(mrrScore));
+			listResultTopK.get(topK).add(Double.toString(rmseScore));
+
 			out.println();
 			try {
 				// out.println(eval.toClassDetailsString());
@@ -410,18 +433,23 @@ public class ModelGenerator {
 	}
 
 	/**
-	 * Save evaluation to file
-	 * without running time
+	 * Save evaluation to file without running time
+	 * 
 	 * @param sortedResult
 	 * @param evalPath
 	 * @param resultPath
 	 */
-	public void saveEvaluationNoTime(HashMap<String, List<Instance>> sortedResult, String evalPath, String resultPath) {
+	public void saveEvaluationNoTime(HashMap<String, List<Instance>> sortedResult, String evalPath, String resultPath,
+			int topK, HashMap<Integer, List<String>> listResultTopK) {
 		try (PrintWriter out = new PrintWriter(evalPath)) {
 			try {
 				// out.println(eval.toClassDetailsString());
-				out.println("MRR: " + calculateMRR(sortedResult));
-				out.println("RMSE: " + calculateRMSE(sortedResult));
+				out.println("TopK" + "\t" + "MRR" + "\t" + "RMSE");
+				double mrrScore = calculateMRR(sortedResult, topK);
+				double rmseScore = calculateRMSE(sortedResult, topK);
+				out.println(topK + "," + mrrScore + "," + rmseScore);
+				listResultTopK.get(topK).add(Double.toString(mrrScore));
+				listResultTopK.get(topK).add(Double.toString(rmseScore));
 				out.println();
 				List<Double> eval2 = evaluation(resultPath);
 				out.print("TP = " + eval2.get(0) + "\t");
@@ -445,6 +473,7 @@ public class ModelGenerator {
 
 	/**
 	 * Evalute top K records in results and save to file
+	 * 
 	 * @param evalPath
 	 * @param sortedResult
 	 * @param topK
@@ -452,7 +481,9 @@ public class ModelGenerator {
 	 * @throws IOException
 	 */
 	public void saveEvaluationTopK(String evalPath, HashMap<String, List<Instance>> sortedResult, int topK,
-			double cut_off) throws IOException {
+			double cut_off, HashMap<Integer, List<String>> listResultTopK) throws IOException {
+		File file = new File(evalPath);
+		file.getParentFile().mkdirs();
 		try (Writer writer = Files.newBufferedWriter(Paths.get(evalPath));
 
 				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
@@ -467,6 +498,10 @@ public class ModelGenerator {
 
 			String[] avg = evalAvg.get(0);
 			csvWriter.writeNext(new String[] { "0", "0", "0", "0", avg[0], avg[1], avg[2] });
+			List<String> listResult = listResultTopK.get(topK);
+			listResult.add(avg[0]);
+			listResult.add(avg[1]);
+			listResult.add(avg[2]);
 
 			for (int i = 0; i < evalTopK.size(); i++) {
 				String[] records = evalTopK.get(i);
@@ -478,6 +513,7 @@ public class ModelGenerator {
 
 	/**
 	 * Calculate NDCG score and save to file
+	 * 
 	 * @param evalPath
 	 * @param sortedResultByPredictedScore
 	 * @param sortedResultByActualScore
@@ -486,7 +522,10 @@ public class ModelGenerator {
 	 * @throws IOException
 	 */
 	public void saveNDCGTopK(String evalPath, HashMap<String, List<Instance>> sortedResultByPredictedScore,
-			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off) throws IOException {
+			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off,
+			HashMap<Integer, List<String>> listResultTopK) throws IOException {
+		File file = new File(evalPath);
+		file.getParentFile().mkdirs();
 		try (Writer writer = Files.newBufferedWriter(Paths.get(evalPath));
 
 				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
@@ -496,24 +535,97 @@ public class ModelGenerator {
 
 			List<String[]> listNDCGTopK = calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore,
 					topK, cut_off);
-			String[] avg = listNDCGTopK.get(listNDCGTopK.size()-1);
+			String[] avg = listNDCGTopK.get(listNDCGTopK.size() - 1);
 			csvWriter.writeNext(avg);
-			for (int i = 0; i < listNDCGTopK.size()-1; i++) {
+			listResultTopK.get(topK).add(avg[1]);
+			for (int i = 0; i < listNDCGTopK.size() - 1; i++) {
 				String[] records = listNDCGTopK.get(i);
 				csvWriter.writeNext(records);
+			}
+		}
+	}
+	
+	public void saveEvaluationSumary(String evalPath, HashMap<Integer, List<String>> listResultTopK)
+			throws IOException {
+		File file = new File(evalPath);
+		file.getParentFile().mkdirs();
+		try (Writer writer = Files.newBufferedWriter(Paths.get(evalPath));
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "TopK", "Precision@K", "Recall@K", "F1@K", "NDCG@K", "MRR", "RMSE" };
+			csvWriter.writeNext(headerRecord);
+			List<Integer> listKey = new ArrayList(listResultTopK.keySet());		
+			Collections.sort(listKey);
+			for (int topk : listKey) {
+				List<String> listResult = listResultTopK.get(topk);
+				String[] record = { Integer.toString(topk), listResult.get(0), listResult.get(1), listResult.get(2),
+						listResult.get(3), listResult.get(4), listResult.get(5) };
+				csvWriter.writeNext(record);
+			}
+		}
+	}
+	
+	public void evaluationSumaryCV(HashMap<Integer, List<String>> listResultTopK, HashMap<Integer, List<Double>> listResultTopKCV)
+			throws IOException {
+			List<Integer> listKey = new ArrayList(listResultTopK.keySet());		
+			Collections.sort(listKey);
+			for (int topk : listKey) {
+				List<String> listResult = listResultTopK.get(topk);
+				List<Double> listResultCV = listResultTopKCV.get(topk);
+				if(listResultCV.isEmpty())
+				{
+					listResultCV.add(Double.valueOf(listResult.get(0)));
+					listResultCV.add(Double.valueOf(listResult.get(1)));
+					listResultCV.add(Double.valueOf(listResult.get(2)));
+					listResultCV.add(Double.valueOf(listResult.get(3)));
+					listResultCV.add(Double.valueOf(listResult.get(4)));
+					listResultCV.add(Double.valueOf(listResult.get(5)));
+				}
+				else{
+					listResultCV.set(0, listResultCV.get(0) + Double.valueOf(listResult.get(0)));
+					listResultCV.set(1, listResultCV.get(1) + Double.valueOf(listResult.get(1)));
+					listResultCV.set(2, listResultCV.get(2) + Double.valueOf(listResult.get(2)));
+					listResultCV.set(3, listResultCV.get(3) + Double.valueOf(listResult.get(3)));
+					listResultCV.set(4, listResultCV.get(4) + Double.valueOf(listResult.get(4)));
+					listResultCV.set(5, listResultCV.get(5) + Double.valueOf(listResult.get(5)));
+				}				
+			}		
+	}
+	
+	public void saveEvaluationSumaryCV(String evalPath, HashMap<Integer, List<Double>> listResultTopKCV, int folds) throws IOException
+	{
+		try (Writer writer = Files.newBufferedWriter(Paths.get(evalPath));
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "TopK", "Precision@K", "Recall@K", "F1@K", "NDCG@K", "MRR", "RMSE" };
+			csvWriter.writeNext(headerRecord);
+			List<Integer> listKey = new ArrayList(listResultTopKCV.keySet());		
+			Collections.sort(listKey);
+			for (int topk : listKey) {
+				List<Double> listResult = listResultTopKCV.get(topk);
+				double precision = listResult.get(0)/folds;
+				double recall = listResult.get(1)/folds;
+				double f1 = listResult.get(2)/folds;
+				double ndcg = listResult.get(3)/folds;
+				double mrr = listResult.get(4)/folds;
+				double rmse = listResult.get(5)/folds;
+				String[] record = { Integer.toString(topk), Double.toString(precision), Double.toString(recall), Double.toString(f1),
+						Double.toString(ndcg), Double.toString(mrr), Double.toString(rmse) };
+				csvWriter.writeNext(record);
 			}
 		}
 	}
 
 	/**
 	 * Visualize REPTree
+	 * 
 	 * @param model
 	 * @param treePath
 	 * @throws Exception
 	 */
 	public void showTree(REPTree model, String treePath) throws Exception {
 		// display classifier
-		final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: REPTree");
+		/*final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: REPTree");
 		jf.setSize(500, 400);
 		jf.getContentPane().setLayout(new BorderLayout());
 		TreeVisualizer tv = new TreeVisualizer(null, model.graph(), new PlaceNode2());
@@ -524,8 +636,12 @@ public class ModelGenerator {
 			}
 		});
 		jf.setVisible(true);
-		tv.fitToScreen();
+		tv.fitToScreen();*/
 		// save tree to file text
+		
+		File file = new File(treePath);		
+		file.getParentFile().mkdirs();
+		
 		try (PrintWriter out = new PrintWriter(treePath + "/tree.dot")) {
 			out.println(model.graph());
 		} catch (FileNotFoundException e) {
@@ -535,13 +651,14 @@ public class ModelGenerator {
 
 	/**
 	 * Visualize M5P
+	 * 
 	 * @param model
 	 * @param treePath
 	 * @throws Exception
 	 */
 	public void showTree(M5P model, String treePath) throws Exception {
 		// display classifier
-		final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: M5P");
+		/*final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: M5P");
 		jf.setSize(500, 400);
 		jf.getContentPane().setLayout(new BorderLayout());
 		TreeVisualizer tv = new TreeVisualizer(null, model.graph(), new PlaceNode2());
@@ -552,8 +669,12 @@ public class ModelGenerator {
 			}
 		});
 		jf.setVisible(true);
-		tv.fitToScreen();
+		tv.fitToScreen();*/
 		// save tree to file text
+		
+		File file = new File(treePath);		
+		file.getParentFile().mkdirs();
+		
 		try (PrintWriter out = new PrintWriter(treePath + "/tree.dot")) {
 			out.println(model.graph());
 		} catch (FileNotFoundException e) {
@@ -562,8 +683,9 @@ public class ModelGenerator {
 	}
 
 	/**
-	 * Convert predicted score to label to calculate Precision, Recall, F1
-	 * Then save to file
+	 * Convert predicted score to label to calculate Precision, Recall, F1 Then
+	 * save to file
+	 * 
 	 * @param scorePath
 	 * @param labelPath
 	 * @param cut_off
@@ -603,13 +725,16 @@ public class ModelGenerator {
 	}
 
 	/**
-	 * Convert predicted score to label to calculate Precision, Recall, F1
-	 * Then save to file with Id field
+	 * Convert predicted score to label to calculate Precision, Recall, F1 Then
+	 * save to file with Id field
+	 * 
 	 * @param scorePath
 	 * @param labelPath
 	 * @param cut_off
 	 */
 	public void convertScoreToLabelWithId(String scorePath, String labelPath, double cut_off) {
+		File file = new File(labelPath);
+		file.getParentFile().mkdirs();
 		try (Reader reader = Files.newBufferedReader(Paths.get(scorePath));
 				CSVReader csvReader = new CSVReader(reader);
 				Writer writer = Files.newBufferedWriter(Paths.get(labelPath));
@@ -647,6 +772,7 @@ public class ModelGenerator {
 
 	/**
 	 * Calculate Precision, Recall, F1
+	 * 
 	 * @param resultPath
 	 * @return
 	 */
@@ -711,15 +837,19 @@ public class ModelGenerator {
 
 	/**
 	 * Calculate MRR score
+	 * 
 	 * @param sortedResult
 	 * @return
 	 */
-	public double calculateMRR(HashMap<String, List<Instance>> sortedResult) {
+	public double calculateMRR(HashMap<String, List<Instance>> sortedResult, int topK) {
 		double mrrScore = 0;
 		for (String newsId1 : sortedResult.keySet()) {
 			List<Instance> records = sortedResult.get(newsId1);
 			double rr = 0;
-			for (int i = 0; i < records.size(); i++) {
+			int maxIndex = topK;
+			if (topK > records.size())
+				maxIndex = records.size();
+			for (int i = 0; i < maxIndex; i++) {
 				Instance record = records.get(i);
 				double actualScore = record.value(3);
 				if (actualScore > 0) {
@@ -732,33 +862,55 @@ public class ModelGenerator {
 		mrrScore = mrrScore / sortedResult.size();
 		return mrrScore;
 	}
-	
+
 	/**
 	 * Calculate RMSE score
+	 * 
 	 * @param sortedResult
 	 * @return
 	 */
-	public double calculateRMSE(HashMap<String, List<Instance>> sortedResult) {
+	public double calculateRMSE(HashMap<String, List<Instance>> sortedResult, int topK) {
 		double rmseScore = 0;
 		double seScore = 0;
 		int nRecords = 0;
+		//Normalize
+		double maxPredictedScore = Double.MIN_VALUE;
+		double minPredictedScore = Double.MAX_VALUE;
+		
 		for (String newsId1 : sortedResult.keySet()) {
 			List<Instance> records = sortedResult.get(newsId1);
-			nRecords = nRecords + records.size();			
 			for (int i = 0; i < records.size(); i++) {
+				Instance record = records.get(i);				
+				double predictScore = record.value(2);
+				if(predictScore>maxPredictedScore)
+					maxPredictedScore = predictScore;
+				if(predictScore<minPredictedScore)
+					minPredictedScore = predictScore;
+			}			
+		}
+		
+		for (String newsId1 : sortedResult.keySet()) {
+			List<Instance> records = sortedResult.get(newsId1);
+			int maxIndex = topK;
+			if (topK > records.size())
+				maxIndex = records.size();
+			nRecords = nRecords + maxIndex;	
+			
+			for (int i = 0; i < maxIndex; i++) {
 				Instance record = records.get(i);
 				double actualScore = record.value(3);
-				double predictScore = record.value(2);
-				seScore = seScore + Math.pow(predictScore-actualScore, 2);
+				double predictScore = normalize(record.value(2), minPredictedScore, maxPredictedScore);
+				seScore = seScore + Math.pow(predictScore - actualScore, 2);
 			}
 		}
-		double mseScore = (double) seScore/nRecords;
+		double mseScore = (double) seScore / nRecords;
 		rmseScore = Math.sqrt(mseScore);
 		return rmseScore;
 	}
 
 	/**
 	 * Calculate NDCG score
+	 * 
 	 * @param sortedResultByPredictedScore
 	 * @param sortedResultByActualScore
 	 * @param topK
@@ -805,13 +957,14 @@ public class ModelGenerator {
 			listNDCGTopK.add(new String[] { newsId1, Double.toString(ndcgp) });
 			sumNDCG = sumNDCG + ndcgp;
 		}
-		avgNDCG = (double) sumNDCG/listNDCGTopK.size();
+		avgNDCG = (double) sumNDCG / listNDCGTopK.size();
 		listNDCGTopK.add(new String[] { "AVG", Double.toString(avgNDCG) });
 		return listNDCGTopK;
 	}
 
 	/**
 	 * Calculate Precision@k, Recall@k, F1@k
+	 * 
 	 * @param sortedResult
 	 * @param topK
 	 * @param cut_off
@@ -891,8 +1044,36 @@ public class ModelGenerator {
 		return listEval;
 	}
 
+	double normalize(double value, double min, double max) {
+	    return (value - min) / (max - min);
+	}
+	
+	public HashMap<String, List<Instance>> filterWrongResults(HashMap<String, List<Instance>> sortedResult, int topK)
+	{
+		HashMap<String, List<Instance>> wrongResult = new HashMap<>();
+		for (String newsId1 : sortedResult.keySet()) {
+			List<Instance> records = sortedResult.get(newsId1);
+			for (int i = 0; i < records.size(); i++) {
+				Instance record = records.get(i);
+				double actualScore = record.value(3);
+				if((i<topK && actualScore==0) || (i>=topK && actualScore>0))
+				{				
+					if (wrongResult.keySet().contains(newsId1)) {
+						wrongResult.get(newsId1).add(record);
+					} else {
+						List<Instance> listInstance = new ArrayList<>();
+						listInstance.add(record);
+						wrongResult.put(newsId1, listInstance);
+					}
+				}
+			}
+		}
+		return wrongResult;
+	}
+	
 	/**
 	 * Create Traind and Test data from original dataset.
+	 * 
 	 * @param dataPath
 	 * @param outPath
 	 * @throws Exception
@@ -944,7 +1125,7 @@ public class ModelGenerator {
 		saverTest.writeBatch();
 	}
 
-	public static void main(String[] args) throws Exception {		
+	public static void main(String[] args) throws Exception {
 		System.out.println("Start");
 		ModelGenerator mg = new ModelGenerator();
 		// Chia du lieu Train va Test

@@ -1,6 +1,7 @@
 package admicro.wekaml;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -17,46 +18,85 @@ public class Test_ModelGenerator {
 		// Danh gia Learning to rank
 		System.out.println("Learning to rank");
 		ModelGenerator mg = new ModelGenerator();
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset1/Test_full_matrix/ne";
-		int topK = 0;
+		List<Integer> topK = new ArrayList<>();
+		topK.add(1);
+		topK.add(3);
+		topK.add(4);
+		topK.add(5);
+		topK.add(10);
 		double cut_off = 0;
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset1/event";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset1/topic";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset1/ne";
 
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset2/event";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset2/topic";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset2/ne";
+		List<String> listDatasetName = new ArrayList<>();
+		List<String> listCriteria = new ArrayList<>();
+		List<String> listFeature = new ArrayList<>();
+		List<String> listTailName = new ArrayList<>();
 
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset3/event";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_L2R/04_09_2018/dataset3/topic";
+		// Add dataset name
+		listDatasetName.add("dataset1");
+//		 listDatasetName.add("dataset2");
+//		 listDatasetName.add("dataset3");
+
+		// Add criteria name
+		listCriteria.add("event");
+		listCriteria.add("topic");
+		listCriteria.add("ne");
+
+		// Add feature name
+		listFeature.add("no_keyword");
+		listFeature.add("no_cosineTF");
+		listFeature.add("no_jaccardBody");
+		listFeature.add("no_jaccardTitle");
+		listFeature.add("no_bm25");
+		listFeature.add("no_lm");
+		listFeature.add("no_ib");
+		listFeature.add("no_avgSim");
+		listFeature.add("no_sumOfMax");
+		listFeature.add("no_maxSim");
+		listFeature.add("no_minSim");
+		listFeature.add("no_jaccardSim");
+		listFeature.add("no_timeSpan");
+		listFeature.add("no_LDASim");
+
+//		for (String dataset : listDatasetName)
+//			for (String criteria : listCriteria)
+//				for (String feature : listFeature)
+//					listTailName.add("_" + dataset + "_" + criteria + "_" + feature);
+		for (String dataset : listDatasetName)
+			for (String criteria : listCriteria)
+				listTailName.add("_" + dataset + "_" + criteria);
 		
-		mg.convertScoreToLabelWithId(RESULTPATH+"/result_Id_score.csv", RESULTPATH+"/result_Id_label.csv", cut_off);
 
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(RESULTPATH+"/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 3);
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_L2R/16_10_2018/all_features/Positive/dataset1/";
 
-		mg.saveEvaluationNoTime(sortedResultByPredictedScore, RESULTPATH+ "/eval.txt", RESULTPATH+"/result_Id_label.csv");
-		
-		for(int k=2;k<=20;k=k+2)
-		{
-			topK = k;
-			mg.saveEvaluationTopK(RESULTPATH+"/evalTopK_"+Integer.toString(topK)+".csv", sortedResultByPredictedScore, topK, cut_off);
-			mg.saveNDCGTopK(RESULTPATH+"/NDCGTopK"+Integer.toString(topK)+".csv", sortedResultByPredictedScore, sortedResultByActualScore, topK, cut_off);
+		for (int index = 0; index < listTailName.size(); index++) {
+			String modelPath = RESULTPATH + listTailName.get(index);
+			System.out.println("----------------------------------------------------");
+			System.out.println(listTailName.get(index));
+
+			mg.convertScoreToLabelWithId(modelPath + "/result_Id_score.csv", modelPath + "/result_Id_label.csv",
+					cut_off);
+
+			// Sort result
+			HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+					.sortResultByAttribute(modelPath + "/result_Id_score.csv", 2);
+			mg.saveSortedResult(modelPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
+			HashMap<String, List<Instance>> sortedResultByActualScore = mg
+					.sortResultByAttribute(modelPath + "/result_Id_score.csv", 3);
+
+			HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
+			for (int k : topK) {
+				List<String> listResult = new ArrayList<>();
+				listResultTopK.put(k, listResult);
+				mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(k) + ".csv",
+						sortedResultByPredictedScore, k, cut_off, listResultTopK);
+				mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(k) + ".csv", sortedResultByPredictedScore,
+						sortedResultByActualScore, k, cut_off, listResultTopK);
+				mg.saveEvaluationNoTime(sortedResultByPredictedScore,
+						modelPath + "/eval_" + Integer.toString(k) + ".txt", modelPath + "/result_Id_label.csv", k,
+						listResultTopK);
+			}
+			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
 		}
-		// ----//
 	}
 
 	/**
@@ -68,47 +108,52 @@ public class Test_ModelGenerator {
 		// Danh gia TF-IDF
 		System.out.println("TF-IDF");
 		ModelGenerator mg = new ModelGenerator();
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset1/Test_full_matrix/ne";
-		int topK = 0;
+		List<Integer> topK = new ArrayList<>();
+		topK.add(1);
+		topK.add(3);
+		topK.add(4);
+		topK.add(5);
+		topK.add(10);
 		double cut_off = 0;
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset1/TFIDF1/topic";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset1/TFIDF1/ne";
-
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/event";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/topic";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset2/TFIDF2/ne";
-
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset3/TFIDF3/event";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset3/TFIDF3/topic";
-		// String RESULTPATH =
-		// "C:/Users/ADMIN/Desktop/Demo/result_tfidf/04_09_2018/dataset3/TFIDF3/ne";
-
-		mg.convertScoreToLabelWithId(RESULTPATH+"/result_Id_score.csv", RESULTPATH+"/result_Id_label.csv", cut_off);
-
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(RESULTPATH+"/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(RESULTPATH + "/result_Id_score.csv", 3);
-
-		mg.saveEvaluationNoTime(sortedResultByPredictedScore, RESULTPATH+ "/eval.txt", RESULTPATH+"/result_Id_label.csv");
 		
-		for(int k=2;k<=20;k=k+2)
-		{
-			topK = k;
-			mg.saveEvaluationTopK(RESULTPATH+"/evalTopK_"+Integer.toString(topK)+".csv", sortedResultByPredictedScore, topK, cut_off);
-			mg.saveNDCGTopK(RESULTPATH+"/NDCGTopK"+Integer.toString(topK)+".csv", sortedResultByPredictedScore, sortedResultByActualScore, topK, cut_off);
+		List<String> listCriteria = new ArrayList<>();
+
+		// Add criteria name
+		listCriteria.add("event");
+		listCriteria.add("topic");
+		listCriteria.add("ne");
+		
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/16_10_2018/Positive/";
+
+		for (int index = 0; index < listCriteria.size(); index++) {
+			String modelPath = RESULTPATH + listCriteria.get(index);
+			System.out.println("----------------------------------------------------");
+			System.out.println(listCriteria.get(index));
+
+			mg.convertScoreToLabelWithId(modelPath + "/result_Id_score.csv", modelPath + "/result_Id_label.csv",
+					cut_off);
+
+			// Sort result
+			HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+					.sortResultByAttribute(modelPath + "/result_Id_score.csv", 2);
+			mg.saveSortedResult(modelPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
+			HashMap<String, List<Instance>> sortedResultByActualScore = mg
+					.sortResultByAttribute(modelPath + "/result_Id_score.csv", 3);
+
+			HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
+			for (int k : topK) {
+				List<String> listResult = new ArrayList<>();
+				listResultTopK.put(k, listResult);
+				mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(k) + ".csv",
+						sortedResultByPredictedScore, k, cut_off, listResultTopK);
+				mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(k) + ".csv", sortedResultByPredictedScore,
+						sortedResultByActualScore, k, cut_off, listResultTopK);
+				mg.saveEvaluationNoTime(sortedResultByPredictedScore,
+						modelPath + "/eval_" + Integer.toString(k) + ".txt", modelPath + "/result_Id_label.csv", k,
+						listResultTopK);
+			}
+			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
 		}
-		
-		// ----//
 	}
 
 	/**
@@ -120,14 +165,14 @@ public class Test_ModelGenerator {
 		ModelGenerator mg = new ModelGenerator();
 		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
 				.sortResultByAttribute("test_case/inputNDCG.csv", 2);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute("test_case/inputNDCG.csv", 3);
+		HashMap<String, List<Instance>> sortedResultByActualScore = mg.sortResultByAttribute("test_case/inputNDCG.csv",
+				3);
 		List<String[]> listResult = mg.calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore, 10,
 				0);
 		for (int i = 0; i < listResult.size(); i++) {
 			System.out.println(listResult.get(i)[0] + "-->" + listResult.get(i)[1]);
 		}
-		//Output: 1-->0.9608081943360616
+		// Output: 1-->0.9608081943360616
 	}
 
 	/**
@@ -136,20 +181,20 @@ public class Test_ModelGenerator {
 	public static void testMRR() {
 		// Test MRR
 		ModelGenerator mg = new ModelGenerator();
-		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv",2);
-		System.out.println(mg.calculateMRR(sortedResult));
-		//Output: 0.611111111111111
+		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv", 2);
+		System.out.println(mg.calculateMRR(sortedResult, 100));
+		// Output: 0.611111111111111
 	}
-	
+
 	/**
 	 * JUST FOR TESTING CODE
 	 */
 	public static void testRMSE() {
 		// Test RMSE
 		ModelGenerator mg = new ModelGenerator();
-		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv",2);
-		System.out.println(mg.calculateRMSE(sortedResult));
-		//Output: 1.9148542155126762
+		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv", 2);
+		System.out.println(mg.calculateRMSE(sortedResult, 100));
+		// Output: 1.9148542155126762
 	}
 
 	public static void main(String[] args) throws IOException {
