@@ -32,13 +32,13 @@ public class Test_ModelGenerator {
 		List<String> listTailName = new ArrayList<>();
 
 		// Add dataset name
-		listDatasetName.add("dataset1");
-//		 listDatasetName.add("dataset2");
-//		 listDatasetName.add("dataset3");
+		// listDatasetName.add("dataset1");
+		// listDatasetName.add("dataset2");
+		listDatasetName.add("dataset3");
 
 		// Add criteria name
-		listCriteria.add("event");
-		listCriteria.add("topic");
+		// listCriteria.add("event");
+		// listCriteria.add("topic");
 		listCriteria.add("ne");
 
 		// Add feature name
@@ -57,16 +57,16 @@ public class Test_ModelGenerator {
 		listFeature.add("no_timeSpan");
 		listFeature.add("no_LDASim");
 
-//		for (String dataset : listDatasetName)
-//			for (String criteria : listCriteria)
-//				for (String feature : listFeature)
-//					listTailName.add("_" + dataset + "_" + criteria + "_" + feature);
 		for (String dataset : listDatasetName)
 			for (String criteria : listCriteria)
-				listTailName.add("_" + dataset + "_" + criteria);
-		
+				for (String feature : listFeature)
+					listTailName.add("_" + dataset + "_" + criteria + "_" + feature);
+		// for (String dataset : listDatasetName)
+		// for (String criteria : listCriteria)
+		// listTailName.add("_" + dataset + "_" + criteria);
 
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_L2R/16_10_2018/all_features/Positive/dataset1/";
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_L2R/24_10_2018/leave_one_feature_out/Positive/"
+				+ listDatasetName.get(0) + "/";
 
 		for (int index = 0; index < listTailName.size(); index++) {
 			String modelPath = RESULTPATH + listTailName.get(index);
@@ -115,15 +115,15 @@ public class Test_ModelGenerator {
 		topK.add(5);
 		topK.add(10);
 		double cut_off = 0;
-		
+
 		List<String> listCriteria = new ArrayList<>();
 
 		// Add criteria name
 		listCriteria.add("event");
 		listCriteria.add("topic");
 		listCriteria.add("ne");
-		
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/16_10_2018/Positive/";
+
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/02_11_2018/Positive/";
 
 		for (int index = 0; index < listCriteria.size(); index++) {
 			String modelPath = RESULTPATH + listCriteria.get(index);
@@ -199,7 +199,7 @@ public class Test_ModelGenerator {
 
 	public static void main(String[] args) throws IOException {
 		System.out.println("(/・・)ノ");
-		evalL2R();
+		evalTFIDF();
 		System.out.println("(*•̀ᴗ•́*)و ̑̑");
 	}
 

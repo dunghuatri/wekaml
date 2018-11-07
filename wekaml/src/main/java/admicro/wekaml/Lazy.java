@@ -35,9 +35,153 @@ public class Lazy {
 		}
 		return resultTopK;
 	}
+	
+	/**
+	 * So sanh 1 thuat toan
+	 * 
+	 * @param resultPath
+	 * @param listTailName
+	 * @param reptreeResult
+	 * @param m5pResult
+	 * @param gbrtResult
+	 * @param tfidfResult
+	 * @throws IOException
+	 */
+	public void writeData(String resultPath, List<String> listTailName,
+			HashMap<String, List<List<String>>> svmResult)
+			throws IOException {
+		File file = new File(resultPath);
+		file.getParentFile().mkdirs();
+		try (Writer writer = Files.newBufferedWriter(Paths.get(resultPath));
+
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			List<String> topK = new ArrayList<>();
+			topK.add("1");
+			topK.add("3");
+			topK.add("4");
+			topK.add("5");
+			topK.add("10");
+
+			for (String key : listTailName) {
+				List<List<String>> svmTopK = svmResult.get(key);
+
+				List<String> recordHeader1 = new ArrayList<>();
+				List<String> recordHeader2 = new ArrayList<>();
+				List<String> recordSvm = new ArrayList<>();
+
+				for (int i = 0; i < topK.size(); i++) {
+					recordHeader1.add(key);
+					recordHeader1.add("Độ đo");
+					for (int n = 0; n < 6; n++)
+						recordHeader1.add("");
+
+					recordHeader2.add("Thuật toán");
+					recordHeader2.add("Precision@" + topK.get(i));
+					recordHeader2.add("Recall@" + topK.get(i));
+					recordHeader2.add("F1@" + topK.get(i));
+					recordHeader2.add("NDCG@" + topK.get(i));
+					recordHeader2.add("MRR");
+					recordHeader2.add("RMSE");
+					recordHeader2.add("");
+
+					List<String> svmData = svmTopK.get(i);
+
+					recordSvm.add("SVM");					
+					
+					for (int j = 0; j < svmData.size(); j++) {
+						recordSvm.add(svmData.get(j));
+					}
+
+					recordSvm.add("");
+				}
+				csvWriter.writeNext(recordHeader1.toArray(new String[0]));
+				csvWriter.writeNext(recordHeader2.toArray(new String[0]));
+				csvWriter.writeNext(recordSvm.toArray(new String[0]));
+				csvWriter.writeNext(new String[] { "" });
+			}
+
+		}
+	}
+	
+	/**
+	 * So sanh 2 thuat toan
+	 * 
+	 * @param resultPath
+	 * @param listTailName
+	 * @param reptreeResult
+	 * @param m5pResult
+	 * @param gbrtResult
+	 * @param tfidfResult
+	 * @throws IOException
+	 */
+	public void writeData(String resultPath, List<String> listTailName,
+			HashMap<String, List<List<String>>> svmResult, HashMap<String, List<List<String>>> tfidfResult)
+			throws IOException {
+		File file = new File(resultPath);
+		file.getParentFile().mkdirs();
+		try (Writer writer = Files.newBufferedWriter(Paths.get(resultPath));
+
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			List<String> topK = new ArrayList<>();
+			topK.add("1");
+			topK.add("3");
+			topK.add("4");
+			topK.add("5");
+			topK.add("10");
+
+			for (String key : listTailName) {
+				List<List<String>> svmTopK = svmResult.get(key);				
+				List<List<String>> tfidfTopK = tfidfResult.get(key);
+
+				List<String> recordHeader1 = new ArrayList<>();
+				List<String> recordHeader2 = new ArrayList<>();
+				List<String> recordSvm = new ArrayList<>();
+				List<String> recordTfidf = new ArrayList<>();
+
+				for (int i = 0; i < topK.size(); i++) {
+					recordHeader1.add(key);
+					recordHeader1.add("Độ đo");
+					for (int n = 0; n < 6; n++)
+						recordHeader1.add("");
+
+					recordHeader2.add("Thuật toán");
+					recordHeader2.add("Precision@" + topK.get(i));
+					recordHeader2.add("Recall@" + topK.get(i));
+					recordHeader2.add("F1@" + topK.get(i));
+					recordHeader2.add("NDCG@" + topK.get(i));
+					recordHeader2.add("MRR");
+					recordHeader2.add("RMSE");
+					recordHeader2.add("");
+
+					List<String> svmData = svmTopK.get(i);					
+					List<String> tfidfData = tfidfTopK.get(i);
+
+					recordSvm.add("SVM");					
+					recordTfidf.add("TFIDF");
+
+					for (int j = 0; j < svmData.size(); j++) {
+						recordSvm.add(svmData.get(j));						
+						recordTfidf.add(tfidfData.get(j));
+					}
+
+					recordSvm.add("");					
+					recordTfidf.add("");
+				}
+				csvWriter.writeNext(recordHeader1.toArray(new String[0]));
+				csvWriter.writeNext(recordHeader2.toArray(new String[0]));
+				csvWriter.writeNext(recordSvm.toArray(new String[0]));				
+				csvWriter.writeNext(recordTfidf.toArray(new String[0]));
+				csvWriter.writeNext(new String[] { "" });
+			}
+
+		}
+	}
 
 	/**
 	 * So sanh theo thuat toan
+	 * 
 	 * @param resultPath
 	 * @param listTailName
 	 * @param reptreeResult
@@ -127,6 +271,7 @@ public class Lazy {
 
 	/**
 	 * So sanh theo feature
+	 * 
 	 * @param resultPath
 	 * @param listTailName
 	 * @param listAlgorithm
@@ -214,110 +359,157 @@ public class Lazy {
 
 		// Add dataset name
 		listDatasetName.add("dataset1");
-//		 listDatasetName.add("dataset2");
-//		 listDatasetName.add("dataset3");
+//		listDatasetName.add("dataset2");
+//		listDatasetName.add("dataset3");
 
 		// Add criteria name
-//		listCriteria.add("event");
-//		 listCriteria.add("topic");
-		 listCriteria.add("ne");
+		listCriteria.add("event");
+		listCriteria.add("topic");
+		listCriteria.add("ne");
 
 		// Add feature name
-		listFeature.add("no_keyword");
-		listFeature.add("no_cosineTF");
-		listFeature.add("no_jaccardBody");
-		listFeature.add("no_jaccardTitle");
-		listFeature.add("no_bm25");
-		listFeature.add("no_lm");
-		listFeature.add("no_ib");
-		listFeature.add("no_avgSim");
-		listFeature.add("no_sumOfMax");
-		listFeature.add("no_maxSim");
-		listFeature.add("no_minSim");
-		listFeature.add("no_jaccardSim");
-		listFeature.add("no_timeSpan");
-		listFeature.add("no_LDASim");
+		listFeature.add("keyword");
+		listFeature.add("cosineTF");
+		listFeature.add("jaccardBody");
+		listFeature.add("jaccardTitle");
+		listFeature.add("bm25");
+		listFeature.add("lm");
+		listFeature.add("ib");
+		listFeature.add("avgSim");
+		listFeature.add("sumOfMax");
+		listFeature.add("maxSim");
+		listFeature.add("minSim");
+		listFeature.add("jaccardSim");
+		listFeature.add("timeSpan");
+		listFeature.add("LDASim");
+		listFeature.add("TFIDF");
 
-		HashMap<String, List<List<String>>> reptreeResult = new HashMap<>();
-		HashMap<String, List<List<String>>> m5pResult = new HashMap<>();
-		HashMap<String, List<List<String>>> gbrtResult = new HashMap<>();
-		HashMap<String, List<List<String>>> tfidfResult = new HashMap<>();
-
-		String reptreePath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/leave_one_feature_out/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/REPTree/";
-		String m5pPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/leave_one_feature_out/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/M5P/";
-		String gbrtPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/leave_one_feature_out/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/GBRT/";
-		String tfidfPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/leave_one_feature_out/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/TFIDF/";
+		HashMap<String, List<List<String>>> svmResult = new HashMap<>();
+//		HashMap<String, List<List<String>>> reptreeResult = new HashMap<>();
+//		HashMap<String, List<List<String>>> m5pResult = new HashMap<>();
+//		HashMap<String, List<List<String>>> gbrtResult = new HashMap<>();
+//		HashMap<String, List<List<String>>> tfidfResult = new HashMap<>();
 
 		for (String dataset : listDatasetName)
-			for (String criteria : listCriteria)
+			for (String criteria : listCriteria) {
+				String svmPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+						+ dataset + "/" + criteria + "/SVM/";
+//				String reptreePath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+//						+ dataset + "/" + criteria + "/REPTree/";
+//				String m5pPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+//						+ dataset + "/" + criteria + "/M5P/";
+//				String gbrtPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+//						+ dataset + "/" + criteria + "/GBRT/";
+//				String tfidfPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+//						+ dataset + "/" + criteria + "/TFIDF/";
 				for (String feature : listFeature) {
 					String name = "_" + dataset + "_" + criteria + "_" + feature;
 					listTailName.add(name);
-					List<List<String>> listReptree = readData(reptreePath + name + "/evalSumary.csv");
-					List<List<String>> listM5p = readData(m5pPath + name + "/evalSumary.csv");
-					List<List<String>> listGbrt = readData(gbrtPath + name + "/evalSumary.csv");
-					List<List<String>> listTfidf = readData(tfidfPath + name + "/evalSumary.csv");
-					reptreeResult.put(name, listReptree);
-					m5pResult.put(name, listM5p);
-					gbrtResult.put(name, listGbrt);
-					tfidfResult.put(name, listTfidf);
+					
+					List<List<String>> listSvm = readData(svmPath + name + "/evalSumary.csv");
+//					List<List<String>> listReptree = readData(reptreePath + name + "/evalSumary.csv");
+//					List<List<String>> listM5p = readData(m5pPath + name + "/evalSumary.csv");
+//					List<List<String>> listGbrt = readData(gbrtPath + name + "/evalSumary.csv");
+//					List<List<String>> listTfidf = readData(tfidfPath + name + "/evalSumary.csv");
+					
+					svmResult.put(name, listSvm);
+//					reptreeResult.put(name, listReptree);
+//					m5pResult.put(name, listM5p);
+//					gbrtResult.put(name, listGbrt);
+//					tfidfResult.put(name, listTfidf);
 				}
-		Collections.sort(listTailName);
-		List<HashMap<String, List<List<String>>>> listAlgorithm = new ArrayList<>();
-		listAlgorithm.add(reptreeResult);
-		listAlgorithm.add(m5pResult);
-		listAlgorithm.add(gbrtResult);
-		listAlgorithm.add(tfidfResult);
-		//So sanh theo thuat toan
-		writeData("C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/leave_one_feature_out/Positive/"+listDatasetName.get(0)+"/"+listDatasetName.get(0)+"_"+listCriteria.get(0)+".csv", listTailName, reptreeResult, m5pResult, gbrtResult, tfidfResult);
-		//So sanh theo feature
-		writeData("C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/leave_one_feature_out/Positive/"+listDatasetName.get(0)+"/"+listDatasetName.get(0)+"_feature_"+listCriteria.get(0)+".csv", listTailName, listAlgorithm);
+				Collections.sort(listTailName);
+				List<HashMap<String, List<List<String>>>> listAlgorithm = new ArrayList<>();
+				listAlgorithm.add(svmResult);
+//				listAlgorithm.add(reptreeResult);
+//				listAlgorithm.add(m5pResult);
+//				listAlgorithm.add(gbrtResult);
+//				listAlgorithm.add(tfidfResult);
+				// So sanh theo thuat toan
+//				writeData(
+//						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+//								+ dataset + "/" + dataset + "_" + criteria + ".csv",
+//						listTailName, reptreeResult, m5pResult, gbrtResult, tfidfResult);
+				// So sanh theo feature
+				writeData(
+						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+								+ dataset + "/" + dataset + "_feature_" + criteria + ".csv",
+						listTailName, listAlgorithm);
+				
+				listTailName.clear();
+			}
 	}
-	
+
 	public void mapDataAllFeature() throws IOException {
 		List<String> listDatasetName = new ArrayList<>();
-		List<String> listCriteria = new ArrayList<>();		
+		List<String> listCriteria = new ArrayList<>();
 		List<String> listTailName = new ArrayList<>();
 
 		// Add dataset name
-		listDatasetName.add("dataset1");
-//		 listDatasetName.add("dataset2");
-//		 listDatasetName.add("dataset3");
+		listDatasetName.add("dataset1_2");
+//		listDatasetName.add("dataset2");
+//		listDatasetName.add("dataset3");
 
 		// Add criteria name
-//		listCriteria.add("event");
-//		 listCriteria.add("topic");
-		 listCriteria.add("ne");
+		listCriteria.add("event");
+		listCriteria.add("topic");
+		listCriteria.add("ne");
 
-		HashMap<String, List<List<String>>> reptreeResult = new HashMap<>();
-		HashMap<String, List<List<String>>> m5pResult = new HashMap<>();
-		HashMap<String, List<List<String>>> gbrtResult = new HashMap<>();
-		HashMap<String, List<List<String>>> tfidfResult = new HashMap<>();
+		HashMap<String, List<List<String>>> svmResult = new HashMap<>();
+//		HashMap<String, List<List<String>>> reptreeResult = new HashMap<>();
+//		HashMap<String, List<List<String>>> m5pResult = new HashMap<>();
+//		HashMap<String, List<List<String>>> gbrtResult = new HashMap<>();
+		HashMap<String, List<List<String>>> tfidfResult = new HashMap<>();		
+		
+		for(String dataset:listDatasetName)
+			for(String criteria:listCriteria)
+			{
+				String svmPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/02_11_2018/all_features/"
+						+ dataset + "/" + criteria + "/SVM/";
+//				String reptreePath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/all_features/Positive/"
+//						+ dataset + "/" + criteria + "/REPTree/";
+//				String m5pPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/all_features/Positive/"
+//						+ dataset + "/" + criteria + "/M5P/";
+//				String gbrtPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/all_features/Positive/"
+//						+ dataset + "/" + criteria + "/GBRT/";
+				String tfidfPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/02_11_2018/all_features/"
+						+ dataset + "/" + criteria + "/TFIDF/";
 
-		String reptreePath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/all_features/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/REPTree/";
-		String m5pPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/all_features/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/M5P/";
-		String gbrtPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/all_features/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/GBRT/";
-		String tfidfPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/all_features/Positive/"+listDatasetName.get(0)+"/"+listCriteria.get(0)+"/TFIDF/";
-		
-		String name = "all";
-		listTailName.add(name);
-		List<List<String>> listReptree = readData(reptreePath + "evalSumary.csv");
-		List<List<String>> listM5p = readData(m5pPath + "evalSumary.csv");
-		List<List<String>> listGbrt = readData(gbrtPath + "evalSumary.csv");
-		List<List<String>> listTfidf = readData(tfidfPath + "evalSumary.csv");
-		reptreeResult.put(name, listReptree);
-		m5pResult.put(name, listM5p);
-		gbrtResult.put(name, listGbrt);
-		tfidfResult.put(name, listTfidf);				
-		
-		Collections.sort(listTailName);
-		List<HashMap<String, List<List<String>>>> listAlgorithm = new ArrayList<>();
-		listAlgorithm.add(reptreeResult);
-		listAlgorithm.add(m5pResult);
-		listAlgorithm.add(gbrtResult);
-		listAlgorithm.add(tfidfResult);
-		//So sanh theo thuat toan
-		writeData("C:/Users/ADMIN/Desktop/Demo/auto_fill_data/16_10_2018/all_features/Positive/"+listDatasetName.get(0)+"/"+listDatasetName.get(0)+"_"+listCriteria.get(0)+".csv", listTailName, reptreeResult, m5pResult, gbrtResult, tfidfResult);
+				String name = criteria;
+				listTailName.add(name);				
+				
+				List<List<String>> listSvm = readData(svmPath + "evalSumary.csv");
+//				List<List<String>> listReptree = readData(reptreePath + "evalSumary.csv");
+//				List<List<String>> listM5p = readData(m5pPath + "evalSumary.csv");
+//				List<List<String>> listGbrt = readData(gbrtPath + "evalSumary.csv");
+				List<List<String>> listTfidf = readData(tfidfPath + "evalSumary.csv");
+				
+				svmResult.put(name, listSvm);
+//				reptreeResult.put(name, listReptree);
+//				m5pResult.put(name, listM5p);
+//				gbrtResult.put(name, listGbrt);
+				tfidfResult.put(name, listTfidf);
+
+				Collections.sort(listTailName);
+				List<HashMap<String, List<List<String>>>> listAlgorithm = new ArrayList<>();
+				listAlgorithm.add(svmResult);
+//				listAlgorithm.add(reptreeResult);
+//				listAlgorithm.add(m5pResult);
+//				listAlgorithm.add(gbrtResult);
+				listAlgorithm.add(tfidfResult);
+				// So sanh theo thuat toan				
+//				writeData(
+//						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/all_features/Positive/" + dataset
+//								+ "/" + dataset + "_" + criteria + ".csv",
+//						listTailName, reptreeResult, m5pResult, gbrtResult, tfidfResult);
+				writeData(
+						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/02_11_2018/all_features/" + dataset
+								+ "/" + dataset + "_" + criteria + ".csv",
+						listTailName, svmResult, tfidfResult);
+				
+				listTailName.clear();
+			}
+
 	}
 
 	public static void main(String[] args) throws IOException {

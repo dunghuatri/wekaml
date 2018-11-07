@@ -22,6 +22,10 @@ import com.opencsv.CSVWriter;
 import weka.classifiers.Classifier;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.evaluation.Prediction;
+import weka.classifiers.functions.SMO;
+import weka.classifiers.functions.SMOreg;
+import weka.classifiers.functions.supportVector.PolyKernel;
+import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.classifiers.trees.M5P;
 import weka.classifiers.trees.REPTree;
 import weka.core.Debug;
@@ -102,7 +106,7 @@ public class ModelGenerator {
 		rt.setMinVarianceProp(0.001);
 		// rt.setNoPruning(false);
 		// rt.setNumDecimalPlaces(2);
-		rt.setNumFolds(3);
+		rt.setNumFolds(5);
 		// rt.setSeed(1);
 		// rt.setSpreadInitialCount(false);
 
@@ -214,6 +218,35 @@ public class ModelGenerator {
 		}
 		return m5p;
 	}
+	
+	/**
+	 * Build model SVM
+	 * @param traindataset
+	 * @return
+	 */
+	public Classifier buildClassifierSVM(Instances traindataset) {
+		SMOreg  smo = new SMOreg ();
+//		SMO  smo = new SMO ();
+		
+		String options= "-C 2.0 -N 0 -I \"weka.classifiers.functions.supportVector.RegSMOImproved -T 0.001 -V -P 1.0E-12 -L 0.001 -W 1\" -K \"weka.classifiers.functions.supportVector.RBFKernel -G 0.0078125 -C 250007\"";
+                
+        try {
+			smo.setOptions(weka.core.Utils.splitOptions(options));
+		} catch (Exception e) {			
+			e.printStackTrace();
+		}
+		
+//		smo.setKernel(new RBFKernel());
+		
+		
+		try {
+			smo.buildClassifier(traindataset);
+
+		} catch (Exception ex) {
+			Logger.getLogger(ModelGenerator.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		return smo;
+	}
 
 	/**
 	 * Model evaluation in weka
@@ -282,6 +315,23 @@ public class ModelGenerator {
 		}
 		return model;
 	}
+	
+	/**
+	 * Load SVM pretrained model from file.
+	 * @param modelpath
+	 * @return
+	 */
+	public Classifier loadModelSVM(String modelpath) {
+		SMOreg model = new SMOreg();
+//		SMO model = new SMO();
+		try {
+			model = (SMOreg) SerializationHelper.read(modelpath);
+//			model = (SMO) SerializationHelper.read(modelpath);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return model;
+	}
 
 	/**
 	 * Save predicted result
@@ -324,7 +374,7 @@ public class ModelGenerator {
 			String[] headerRecord = { "newsId1", "newsId2", "Predicted", "Actual" };
 			csvWriter.writeNext(headerRecord);
 
-			ArrayList<Prediction> results = eval.predictions();
+			ArrayList<Prediction> results = eval.predictions();			
 			for (int i = 0; i < results.size(); i++) {
 				csvWriter.writeNext(new String[] { testData.get(i).toString(0), testData.get(i).toString(1),
 						Double.toString(results.get(i).predicted()), Double.toString(results.get(i).actual()) });
@@ -899,12 +949,12 @@ public class ModelGenerator {
 			for (int i = 0; i < maxIndex; i++) {
 				Instance record = records.get(i);
 				double actualScore = record.value(3);
-				double predictScore = normalize(record.value(2), minPredictedScore, maxPredictedScore);
+				double predictScore = normalize(record.value(2), minPredictedScore, maxPredictedScore);				
 				seScore = seScore + Math.pow(predictScore - actualScore, 2);
 			}
-		}
-		double mseScore = (double) seScore / nRecords;
-		rmseScore = Math.sqrt(mseScore);
+		}		
+		double mseScore = (double) seScore / nRecords;		
+		rmseScore = Math.sqrt(mseScore);		
 		return rmseScore;
 	}
 
@@ -1045,6 +1095,8 @@ public class ModelGenerator {
 	}
 
 	double normalize(double value, double min, double max) {
+		if(min == max)
+			return 1;
 	    return (value - min) / (max - min);
 	}
 	
@@ -1072,7 +1124,7 @@ public class ModelGenerator {
 	}
 	
 	/**
-	 * Create Traind and Test data from original dataset.
+	 * Create Train and Test data from original dataset.
 	 * 
 	 * @param dataPath
 	 * @param outPath
@@ -1124,14 +1176,72 @@ public class ModelGenerator {
 		saverTest.setNoHeaderRow(false);
 		saverTest.writeBatch();
 	}
+	
+	/**
+	 * Create Train and Validation data from original dataset.
+	 * 
+	 * @param dataPath
+	 * @param outPath
+	 * @throws Exception
+	 */
+	public void createCVDataset(String dataPath, String outPath, int folds) throws Exception {
+		long startTime;
+		long endTime;
+		long totalTime;
+
+		Instances originalData = loadDatasetWithId(dataPath);
+		
+		// Preprocess data
+		System.out.println("Preprocessing ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		Preporcess prep = new Preporcess();
+		Instances preprocessedData = prep.Numeric2Nominal(originalData, "1,2");
+		preprocessedData.randomize(new Debug.Random(1));
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+		
+		// Stratify
+		if (preprocessedData.classAttribute().isNominal())
+			preprocessedData.stratify(folds);
+
+		for(int i=0;i<folds;i++)
+		{
+			System.out.println("Deviding dataset ...");
+			startTime = System.currentTimeMillis();
+			// -------------------------------------------//
+			System.out.println("Fold " + i);
+			// Get the folds
+			Instances traindataset = preprocessedData.trainCV(folds, i);
+			Instances testdataset = preprocessedData.testCV(folds, i);
+			// -------------------------------------------//
+			endTime = System.currentTimeMillis();
+			totalTime = endTime - startTime;
+			System.out.println("done " + totalTime / 1000 + " s");
+
+			CSVSaver saverTrain = new CSVSaver();
+			saverTrain.setInstances(traindataset);
+			saverTrain.setFile(new File(outPath + "/Fold_"+i+"/d1_features_label_event.csv"));
+			saverTrain.setNoHeaderRow(false);
+			saverTrain.writeBatch();
+
+			CSVSaver saverTest = new CSVSaver();
+			saverTest.setInstances(testdataset);
+			saverTest.setFile(new File(outPath + "/Fold_"+i+"/features_082017_ts_event.csv"));
+			saverTest.setNoHeaderRow(false);
+			saverTest.writeBatch();
+		}		
+	}
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("Start");
 		ModelGenerator mg = new ModelGenerator();
 		// Chia du lieu Train va Test
-		String dataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/features_topic_1992.csv";
-		String outPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_09_2018/dataset3/Train_Test_9_1";
-		mg.createTrainAndTestDataset(dataPath, outPath);
+		String dataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Train/dataset1/d1_features_ne_3110.csv";
+		String outPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Test/dataset1/ne/CV10";
+		mg.createCVDataset(dataPath, outPath, 10);		
 		// ----//
 		System.out.println("(((o(*ﾟ▽ﾟ*)o)))");
 
