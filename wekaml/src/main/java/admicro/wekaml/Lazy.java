@@ -321,7 +321,7 @@ public class Lazy {
 						for (int n = 0; n < 6; n++)
 							recordHeader1.add("");
 
-						recordHeader2.add("No Feature");
+						recordHeader2.add("Feature");
 						recordHeader2.add("Precision@" + topK.get(i));
 						recordHeader2.add("Recall@" + topK.get(i));
 						recordHeader2.add("F1@" + topK.get(i));
@@ -363,27 +363,28 @@ public class Lazy {
 //		listDatasetName.add("dataset3");
 
 		// Add criteria name
-		listCriteria.add("event");
-		listCriteria.add("topic");
+//		listCriteria.add("event");
+//		listCriteria.add("topic");
 		listCriteria.add("ne");
 
-		// Add feature name
-		listFeature.add("keyword");
-		listFeature.add("cosineTF");
-		listFeature.add("jaccardBody");
-		listFeature.add("jaccardTitle");
-		listFeature.add("bm25");
-		listFeature.add("lm");
-		listFeature.add("ib");
-		listFeature.add("avgSim");
-		listFeature.add("sumOfMax");
-		listFeature.add("maxSim");
-		listFeature.add("minSim");
-		listFeature.add("jaccardSim");
-		listFeature.add("timeSpan");
-		listFeature.add("LDASim");
-		listFeature.add("TFIDF");
-
+		// Add feature name		
+		listFeature.add("no_keyword");//3
+		listFeature.add("no_timeSpan");//15
+		listFeature.add("no_minSim");//13
+		listFeature.add("no_maxSim");//12
+		listFeature.add("no_avgSim");//10
+		listFeature.add("no_jaccardTitle");//6
+		listFeature.add("no_ib");//9
+		listFeature.add("no_sumOfMax");//11
+		listFeature.add("no_lm");//8
+		listFeature.add("no_bm25");//7
+		listFeature.add("no_jaccardBody");//5
+		listFeature.add("no_jaccardSim");//14
+		listFeature.add("no_cosineTF");//4
+		listFeature.add("no_LDASim");//16
+//		listFeature.add("TFIDF"); //17
+		
+				
 		HashMap<String, List<List<String>>> svmResult = new HashMap<>();
 //		HashMap<String, List<List<String>>> reptreeResult = new HashMap<>();
 //		HashMap<String, List<List<String>>> m5pResult = new HashMap<>();
@@ -392,7 +393,7 @@ public class Lazy {
 
 		for (String dataset : listDatasetName)
 			for (String criteria : listCriteria) {
-				String svmPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+				String svmPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/08_11_2018_(special)/leave_one_feature_out/Positive/"
 						+ dataset + "/" + criteria + "/SVM/";
 //				String reptreePath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
 //						+ dataset + "/" + criteria + "/REPTree/";
@@ -432,7 +433,7 @@ public class Lazy {
 //						listTailName, reptreeResult, m5pResult, gbrtResult, tfidfResult);
 				// So sanh theo feature
 				writeData(
-						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/leave_one_feature_out/Positive/"
+						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/08_11_2018_(special)/leave_one_feature_out/Positive/"
 								+ dataset + "/" + dataset + "_feature_" + criteria + ".csv",
 						listTailName, listAlgorithm);
 				
@@ -446,13 +447,13 @@ public class Lazy {
 		List<String> listTailName = new ArrayList<>();
 
 		// Add dataset name
-		listDatasetName.add("dataset1_2");
+		listDatasetName.add("dataset1");
 //		listDatasetName.add("dataset2");
 //		listDatasetName.add("dataset3");
 
 		// Add criteria name
-		listCriteria.add("event");
-		listCriteria.add("topic");
+//		listCriteria.add("event");
+//		listCriteria.add("topic");
 		listCriteria.add("ne");
 
 		HashMap<String, List<List<String>>> svmResult = new HashMap<>();
@@ -464,7 +465,7 @@ public class Lazy {
 		for(String dataset:listDatasetName)
 			for(String criteria:listCriteria)
 			{
-				String svmPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/02_11_2018/all_features/"
+				String svmPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/07_11_2018/all_features/Positive/"
 						+ dataset + "/" + criteria + "/SVM/";
 //				String reptreePath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/all_features/Positive/"
 //						+ dataset + "/" + criteria + "/REPTree/";
@@ -472,7 +473,7 @@ public class Lazy {
 //						+ dataset + "/" + criteria + "/M5P/";
 //				String gbrtPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018/all_features/Positive/"
 //						+ dataset + "/" + criteria + "/GBRT/";
-				String tfidfPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/02_11_2018/all_features/"
+				String tfidfPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/07_11_2018/all_features/Positive/"
 						+ dataset + "/" + criteria + "/TFIDF/";
 
 				String name = criteria;
@@ -503,7 +504,7 @@ public class Lazy {
 //								+ "/" + dataset + "_" + criteria + ".csv",
 //						listTailName, reptreeResult, m5pResult, gbrtResult, tfidfResult);
 				writeData(
-						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/02_11_2018/all_features/" + dataset
+						"C:/Users/ADMIN/Desktop/Demo/auto_fill_data/07_11_2018/all_features/Positive/" + dataset
 								+ "/" + dataset + "_" + criteria + ".csv",
 						listTailName, svmResult, tfidfResult);
 				
@@ -515,7 +516,7 @@ public class Lazy {
 	public static void main(String[] args) throws IOException {
 		Lazy lazy = new Lazy();
 		System.out.println("(/・・)ノ");
-		lazy.mapDataAllFeature();
+		lazy.mapData();
 		System.out.println("＼(ﾟｰﾟ＼)");
 	}
 

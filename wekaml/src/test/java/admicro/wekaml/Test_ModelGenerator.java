@@ -119,11 +119,11 @@ public class Test_ModelGenerator {
 		List<String> listCriteria = new ArrayList<>();
 
 		// Add criteria name
-		listCriteria.add("event");
-		listCriteria.add("topic");
+//		listCriteria.add("event");
+//		listCriteria.add("topic");
 		listCriteria.add("ne");
 
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/02_11_2018/Positive/";
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/Sua_nhan/";
 
 		for (int index = 0; index < listCriteria.size(); index++) {
 			String modelPath = RESULTPATH + listCriteria.get(index);

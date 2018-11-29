@@ -228,16 +228,43 @@ public class ModelGenerator {
 		SMOreg  smo = new SMOreg ();
 //		SMO  smo = new SMO ();
 		
-		String options= "-C 2.0 -N 0 -I \"weka.classifiers.functions.supportVector.RegSMOImproved -T 0.001 -V -P 1.0E-12 -L 0.001 -W 1\" -K \"weka.classifiers.functions.supportVector.RBFKernel -G 0.0078125 -C 250007\"";
-                
-        try {
-			smo.setOptions(weka.core.Utils.splitOptions(options));
-		} catch (Exception e) {			
-			e.printStackTrace();
+//		String options= "-C 2.0 -N 0 -I \"weka.classifiers.functions.supportVector.RegSMOImproved -T 0.001 -V -P 1.0E-12 -L 0.001 -W 1\" -K \"weka.classifiers.functions.supportVector.RBFKernel -G 0.0078125 -C 250007\"";
+//                
+//        try {
+//			smo.setOptions(weka.core.Utils.splitOptions(options));
+//		} catch (Exception e) {			
+//			e.printStackTrace();
+//		}
+		
+		smo.setKernel(new RBFKernel());
+		
+		
+		try {
+			smo.buildClassifier(traindataset);
+
+		} catch (Exception ex) {
+			Logger.getLogger(ModelGenerator.class.getName()).log(Level.SEVERE, null, ex);
 		}
+		return smo;
+	}
+	
+	/**
+	 * Build model SVC
+	 * @param traindataset
+	 * @return
+	 */
+	public Classifier buildClassifierSVC(Instances traindataset) {		
+		SMO  smo = new SMO ();
 		
-//		smo.setKernel(new RBFKernel());
+//		String options= "-C 2.0 -N 0 -I \"weka.classifiers.functions.supportVector.RegSMOImproved -T 0.001 -V -P 1.0E-12 -L 0.001 -W 1\" -K \"weka.classifiers.functions.supportVector.RBFKernel -G 0.0078125 -C 250007\"";
+//                
+//        try {
+//			smo.setOptions(weka.core.Utils.splitOptions(options));
+//		} catch (Exception e) {			
+//			e.printStackTrace();
+//		}
 		
+		smo.setKernel(new RBFKernel());
 		
 		try {
 			smo.buildClassifier(traindataset);
@@ -332,6 +359,21 @@ public class ModelGenerator {
 		}
 		return model;
 	}
+	
+	/**
+	 * Load SVC pretrained model from file.
+	 * @param modelpath
+	 * @return
+	 */
+	public Classifier loadModelSVC(String modelpath) {
+		SMO model = new SMO();
+		try {
+			model = (SMO) SerializationHelper.read(modelpath);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return model;
+	}
 
 	/**
 	 * Save predicted result
@@ -403,7 +445,7 @@ public class ModelGenerator {
 
 			for (String newsId1 : sortedResult.keySet()) {
 				List<Instance> listInstance = sortedResult.get(newsId1);
-				for (int i = 0; i < listInstance.size(); i++) {
+				for (int i = 0; i < listInstance.size(); i++) {					
 					Instance record = listInstance.get(i);
 					csvWriter.writeNext(
 							new String[] { newsId1, record.toString(1), record.toString(2), record.toString(3) });
@@ -462,6 +504,43 @@ public class ModelGenerator {
 			out.println();
 			try {
 				// out.println(eval.toClassDetailsString());
+				List<Double> eval2 = evaluation(resultPath);
+				out.print("TP = " + eval2.get(0) + "\t");
+				out.println("FP = " + eval2.get(1));
+				out.print("FN = " + eval2.get(2) + "\t");
+				out.println("TN = " + eval2.get(3));
+				out.println("-------------------\n");
+
+				out.println("Accuracy:\t" + eval2.get(4) + "\n");
+				out.println("Class\t\t Precision\t\t\t Recall\t\t\t\t\t F1");
+				out.println("1\t\t " + eval2.get(5) + "\t\t" + eval2.get(6) + "\t\t" + eval2.get(7));
+				out.println("0\t\t " + eval2.get(8) + "\t\t" + eval2.get(9) + "\t\t" + eval2.get(10));
+				out.println("AVG\t\t " + eval2.get(11) + "\t\t" + eval2.get(12) + "\t\t" + eval2.get(13));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Save evaluation SVC to file
+	 * 
+	 * @param eval
+	 * @param sortedResult
+	 * @param evalPath
+	 * @param resultPath
+	 */
+	public void saveEvaluationSVC(Evaluation eval, String evalPath, String resultPath) {
+		File file = new File(evalPath);
+		file.getParentFile().mkdirs();
+		try (PrintWriter out = new PrintWriter(evalPath)) {
+			out.println("Time: " + eval.totalCost() + "\n" + eval.toSummaryString());
+			out.println();
+			try {
+				out.println(eval.toClassDetailsString());
+				out.println("=====================================");
 				List<Double> eval2 = evaluation(resultPath);
 				out.print("TP = " + eval2.get(0) + "\t");
 				out.println("FP = " + eval2.get(1));

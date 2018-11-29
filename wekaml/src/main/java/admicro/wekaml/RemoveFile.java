@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public class RemoveFile {
-	public static String inputPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/24_10_2018";
+	public static String inputPath = "C:/Users/ADMIN/Desktop/Demo/auto_fill_data/08_11_2018_(special)";
 	public static String fileName = "evalSumary.csv";
 
 	public static void main(String[] args) {
