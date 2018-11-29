@@ -114,26 +114,26 @@ public class Test_ModelGenerator {
 		topK.add(4);
 		topK.add(5);
 		topK.add(10);
-		double cut_off = 0;
+		double cut_off = 0.18;
 
 		List<String> listCriteria = new ArrayList<>();
 
 		// Add criteria name
-//		listCriteria.add("event");
-//		listCriteria.add("topic");
+		listCriteria.add("event");
+		listCriteria.add("topic");
 		listCriteria.add("ne");
 
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/Sua_nhan/";
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/26_11_2018/TestSVC/";
 
 		for (int index = 0; index < listCriteria.size(); index++) {
 			String modelPath = RESULTPATH + listCriteria.get(index);
 			System.out.println("----------------------------------------------------");
 			System.out.println(listCriteria.get(index));
 
-			mg.convertScoreToLabelWithId(modelPath + "/result_Id_score.csv", modelPath + "/result_Id_label.csv",
-					cut_off);
+			mg.convertScoreToLabelWithId(modelPath + "/result_Id_score.csv", modelPath + "/result_Id_label.csv", cut_off);			
+			mg.saveEvaluationNoTimeSVC(modelPath + "/eval.txt", modelPath + "/result_Id_label.csv");
 
-			// Sort result
+			/*// Sort result
 			HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
 					.sortResultByAttribute(modelPath + "/result_Id_score.csv", 2);
 			mg.saveSortedResult(modelPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
@@ -152,7 +152,7 @@ public class Test_ModelGenerator {
 						modelPath + "/eval_" + Integer.toString(k) + ".txt", modelPath + "/result_Id_label.csv", k,
 						listResultTopK);
 			}
-			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
+			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);*/
 		}
 	}
 

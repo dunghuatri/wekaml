@@ -1088,6 +1088,7 @@ public class StartWeka {
 		startTime = System.currentTimeMillis();
 		// -------------------------------------------//
 		mg.saveEvaluationSVC(eval, EVALPATH + "/eval.txt", RESULTPATH + "/result_Id_label.csv");
+		mg.saveEvaluationSVC2(EVALPATH + "/eval_brief.txt", RESULTPATH + "/result_Id_label.csv");
 		/*// Sort result
 		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
 				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
@@ -1646,22 +1647,15 @@ public class StartWeka {
 		List<String> listTrainPath = new ArrayList<>();
 		List<String> listTestPath = new ArrayList<>();
 
-		// Train Dataset1
-		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_07_11_2018/Train/dataset1/d1_features_event_2.csv");
-//		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
-//		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
-//		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
+		// Train Dataset1		
+		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
+		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
+		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
 
 		// Test
-//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/testset_features_event.csv");
-//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/testset_features_topic.csv");
-//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/testset_features_ne.csv");
-
-		// Test Positive
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_07_11_2018/Test/Positive/features_082017_pos_event.csv");
-//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/Positive/testset_features_pos_event.csv");
-//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/Positive/testset_features_pos_topic.csv");
-//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test/Positive/testset_features_pos_ne.csv");		
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_event_2.csv");		
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_topic_2.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_ne_2.csv");
 		
 		for (int i = 0; i < listTrainPath.size(); i++) {
 			String trainDataPath = listTrainPath.get(i);

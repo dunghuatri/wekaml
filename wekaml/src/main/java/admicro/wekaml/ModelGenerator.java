@@ -560,6 +560,22 @@ public class ModelGenerator {
 			e.printStackTrace();
 		}
 	}
+	
+	public void saveEvaluationSVC2(String evalPath, String resultPath) {
+		File file = new File(evalPath);
+		file.getParentFile().mkdirs();
+		try (PrintWriter out = new PrintWriter(evalPath)) {			
+			try {				
+				List<Double> eval2 = evaluation(resultPath);
+				out.println("TP,FP,FN,TN,Precision,Recall,F1,Accuracy");
+				out.println(eval2.get(0)+","+eval2.get(1)+","+eval2.get(2)+","+eval2.get(3)+","+eval2.get(5)+","+eval2.get(6)+","+eval2.get(7)+","+eval2.get(4));				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Save evaluation to file without running time
@@ -580,6 +596,36 @@ public class ModelGenerator {
 				listResultTopK.get(topK).add(Double.toString(mrrScore));
 				listResultTopK.get(topK).add(Double.toString(rmseScore));
 				out.println();
+				List<Double> eval2 = evaluation(resultPath);
+				out.print("TP = " + eval2.get(0) + "\t");
+				out.println("FP = " + eval2.get(1));
+				out.print("FN = " + eval2.get(2) + "\t");
+				out.println("TN = " + eval2.get(3));
+				out.println("-------------------\n");
+
+				out.println("Accuracy:\t" + eval2.get(4) + "\n");
+				out.println("Class\t\t Precision\t\t\t Recall\t\t\t\t\t F1");
+				out.println("1\t\t " + eval2.get(5) + "\t\t" + eval2.get(6) + "\t\t" + eval2.get(7));
+				out.println("0\t\t " + eval2.get(8) + "\t\t" + eval2.get(9) + "\t\t" + eval2.get(10));
+				out.println("AVG\t\t " + eval2.get(11) + "\t\t" + eval2.get(12) + "\t\t" + eval2.get(13));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Save evaluation to file without running time SVC
+	 * 
+	 * @param sortedResult
+	 * @param evalPath
+	 * @param resultPath
+	 */
+	public void saveEvaluationNoTimeSVC(String evalPath, String resultPath) {
+		try (PrintWriter out = new PrintWriter(evalPath)) {
+			try {
 				List<Double> eval2 = evaluation(resultPath);
 				out.print("TP = " + eval2.get(0) + "\t");
 				out.println("FP = " + eval2.get(1));
