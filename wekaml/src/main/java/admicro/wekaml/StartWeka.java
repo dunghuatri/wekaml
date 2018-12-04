@@ -1280,8 +1280,7 @@ public class StartWeka {
 		// Sort result
 		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
 				.sortResultByAttributes(resultSvrPath + "/result_Id_score_label.csv", 2, 3);
-		mg.saveSortedResultSvcSvr(evalSvrPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		mg.saveSortedResult(evalSvrPath + "/result_Id_score_sorted_2.csv", sortedResultByPredictedScore);
+		mg.saveSortedResultSvcSvr(evalSvrPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);		
 		// Filter wrong results
 		HashMap<String, List<Instance>> wrongResults = mg.filterWrongResults(sortedResultByPredictedScore, 10);
 		mg.saveSortedResult(evalSvrPath + "/wrong_Results.csv", wrongResults);
@@ -1830,15 +1829,21 @@ public class StartWeka {
 		List<String> listTrainPath = new ArrayList<>();
 		List<String> listTestPath = new ArrayList<>();
 
-		// Train Dataset1		
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
+		// Train Dataset1
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/event.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/topic.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/ne.csv");		
+//		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
+//		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
+//		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
 
 		// Test
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_event_2.csv");		
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_topic_2.csv");
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_ne_2.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/event.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/topic.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/ne.csv");
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_event_2.csv");		
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_topic_2.csv");
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_ne_2.csv");
 		
 		for (int i = 0; i < listTrainPath.size(); i++) {
 			String trainDataPath = listTrainPath.get(i);
@@ -2395,9 +2400,9 @@ public class StartWeka {
 		// TREEPATH = args[4];
 		// runREPTree();
 		// runM5P();
-//		runSVC();
+		runSVC();
 //		runSVM();
-		runSvcAndSvr();
+//		runSvcAndSvr();
 //		runSvmLofo();
 		// runCVREPTree2();
 		// runTotal();

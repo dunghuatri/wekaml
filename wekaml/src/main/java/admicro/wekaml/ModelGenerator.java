@@ -553,10 +553,8 @@ public class ModelGenerator {
 	 */
 	public HashMap<String, List<Instance>> sortResultByAttributes(String resultPath, int attScoreIndex, int attLabelIndex) {		
 		Instances resultData = loadDatasetWithId(resultPath);
-		resultData.sort(attScoreIndex);
-		System.out.println(resultData);
+		resultData.sort(attScoreIndex);		
 //		resultData.sort(attLabelIndex);
-//		System.out.println(resultData);
 		
 		HashMap<String, List<Instance>> sortedResult0 = new HashMap<>();
 		HashMap<String, List<Instance>> sortedResult1 = new HashMap<>();
@@ -589,19 +587,18 @@ public class ModelGenerator {
 			}		
 		}
 		
-//		for(String newsId1:sortedResult0.keySet())
-//		{
-//			if(sortedResult1.keySet().contains(newsId1))
-//			{
-//				sortedResult.put(newsId1, sortedResult1.get(newsId1));
-//				List<Instance> listInstance = sortedResult0.get(newsId1);
-//				for(int i=0;i<listInstance.size();i++)
-//					
-//			}
-//			
-//		}
-		
-		
+		for(String newsId1:sortedResult0.keySet())
+		{
+			if(sortedResult1.keySet().contains(newsId1))
+			{
+				sortedResult.put(newsId1, sortedResult1.get(newsId1));
+				List<Instance> listInstance = sortedResult0.get(newsId1);
+				for(int i=0;i<listInstance.size();i++)
+					sortedResult.get(newsId1).add(listInstance.get(i));								
+			}
+			else			
+				sortedResult.put(newsId1, sortedResult0.get(newsId1));			
+		}		
 		return sortedResult;
 	}
 
@@ -1493,17 +1490,15 @@ public class ModelGenerator {
 //		String outPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Test/dataset1/ne/CV10";
 //		mg.createCVDataset(dataPath, outPath, 10);		
 		// ----//
-//		String EVALPATH = "C:/Users/ADMIN/workspace/wekaml/wekaml/result/SVR/event";
-//		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-//				.sortResultByAttributes(EVALPATH + "/result_Id_score_label.csv", 2, 3);
+		String EVALPATH = "C:/Users/ADMIN/workspace/wekaml/wekaml/result/SVR/event";
+		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+				.sortResultByAttributes(EVALPATH + "/result_Id_score_label.csv", 2, 3);
 		
 //		String EVALPATH = "C:/Users/ADMIN/Desktop";
 //		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
 //				.sortResultByAttributes(EVALPATH + "/score.txt", 2, 3);
-//		List<Instance> a = sortedResultByPredictedScore.get("d416072");
-//		for(int i=0;i<10;i++)
-//			System.out.println(a.get(i));
-//		mg.saveSortedResult(EVALPATH + "/yyy.csv", sortedResultByPredictedScore);
+		
+		mg.saveSortedResult(EVALPATH + "/yyy.csv", sortedResultByPredictedScore);
 		
 		System.out.println("(((o(*ﾟ▽ﾟ*)o)))");
 
