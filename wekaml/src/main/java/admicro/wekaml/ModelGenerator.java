@@ -454,6 +454,70 @@ public class ModelGenerator {
 			}
 		}
 	}
+	
+	/**
+	 * Save sorted result
+	 * 
+	 * @param resultPath
+	 * @param sortedResult
+	 * @throws IOException
+	 */
+	public void saveSortedResultSvcSvr(String resultPath, HashMap<String, List<Instance>> sortedResult) throws IOException {
+		// HashMap<String, List<Instance>> sortedResult =
+		// sortResultByAttribute(resultPath+"/result_Id_score.csv",2);
+		File file = new File(resultPath);
+		file.getParentFile().mkdirs();
+		try (Writer writer = Files.newBufferedWriter(Paths.get(resultPath));
+
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "newsId1", "newsId2", "Predicted_score", "Predicted_label", "Actual_label" };
+			csvWriter.writeNext(headerRecord);
+
+			for (String newsId1 : sortedResult.keySet()) {
+				List<Instance> listInstance = sortedResult.get(newsId1);
+				for (int i = 0; i < listInstance.size(); i++) {					
+					Instance record = listInstance.get(i);
+					csvWriter.writeNext(
+							new String[] { newsId1, record.toString(1), record.toString(2), record.toString(3), record.toString(4) });
+				}
+
+			}
+		}
+	}
+	
+	/**
+	 * Combine score with label and save result
+	 * 
+	 * @param resultPath
+	 * @param sortedResult
+	 * @throws IOException
+	 */
+	public void combineAndSaveResult(String resultScorePath, String resultLabelPath, String resultPath) throws IOException {		
+		Instances resultScoreData = loadDatasetWithId(resultScorePath);
+		Instances resultLabelData = loadDatasetWithId(resultLabelPath);
+		
+		File file = new File(resultPath);
+		file.getParentFile().mkdirs();
+		try (Writer writer = Files.newBufferedWriter(Paths.get(resultPath));
+				CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER,
+						CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);) {
+			String[] headerRecord = { "newsId1", "newsId2", "Predicted_score", "Predicted_label", "Actual_label" };
+			csvWriter.writeNext(headerRecord);
+			
+			for(int i=0;i<resultScoreData.numInstances();i++)
+			{
+				Instance recordScore = resultScoreData.get(i);
+				Instance recordLabel = resultLabelData.get(i);
+				String newsId1 = recordScore.toString(0);
+				String newsId2 = recordScore.toString(1);
+				String score = recordScore.toString(2);
+				String label = recordLabel.toString(2);
+				String actual = recordScore.toString(3);
+				csvWriter.writeNext(new String[] { newsId1, newsId2, score, label, actual });
+			}
+		}
+	}
 
 	/**
 	 * Sort results by an attribute (field)
@@ -464,7 +528,7 @@ public class ModelGenerator {
 	 */
 	public HashMap<String, List<Instance>> sortResultByAttribute(String resultPath, int attIndex) {
 		Instances resultData = loadDatasetWithId(resultPath);
-		resultData.sort(attIndex);
+		resultData.sort(attIndex);		
 		HashMap<String, List<Instance>> sortedResult = new HashMap<>();
 		for (int i = resultData.numInstances() - 1; i >= 0; i--) {
 			Instance record = resultData.get(i);
@@ -477,6 +541,67 @@ public class ModelGenerator {
 				sortedResult.put(newsId1, listInstance);
 			}
 		}
+		return sortedResult;
+	}
+	
+	/**
+	 * Sort results by attributes (field)
+	 * 
+	 * @param resultPath
+	 * @param attIndex
+	 * @return
+	 */
+	public HashMap<String, List<Instance>> sortResultByAttributes(String resultPath, int attScoreIndex, int attLabelIndex) {		
+		Instances resultData = loadDatasetWithId(resultPath);
+		resultData.sort(attScoreIndex);
+		System.out.println(resultData);
+//		resultData.sort(attLabelIndex);
+//		System.out.println(resultData);
+		
+		HashMap<String, List<Instance>> sortedResult0 = new HashMap<>();
+		HashMap<String, List<Instance>> sortedResult1 = new HashMap<>();
+		HashMap<String, List<Instance>> sortedResult = new HashMap<>();
+		
+		for (int i = resultData.numInstances() - 1; i >= 0; i--) {
+			Instance record = resultData.get(i);			
+			String newsId1 = record.toString(0);
+			String predictedLabel = record.toString(attLabelIndex);
+			
+			if(predictedLabel.equals("0"))
+			{
+				if (sortedResult0.keySet().contains(newsId1)) {
+					sortedResult0.get(newsId1).add(record);
+				} else {
+					List<Instance> listInstance = new ArrayList<>();
+					listInstance.add(record);
+					sortedResult0.put(newsId1, listInstance);
+				}
+			}
+			else
+			{
+				if (sortedResult1.keySet().contains(newsId1)) {
+					sortedResult1.get(newsId1).add(record);
+				} else {
+					List<Instance> listInstance = new ArrayList<>();
+					listInstance.add(record);
+					sortedResult1.put(newsId1, listInstance);
+				}
+			}		
+		}
+		
+//		for(String newsId1:sortedResult0.keySet())
+//		{
+//			if(sortedResult1.keySet().contains(newsId1))
+//			{
+//				sortedResult.put(newsId1, sortedResult1.get(newsId1));
+//				List<Instance> listInstance = sortedResult0.get(newsId1);
+//				for(int i=0;i<listInstance.size();i++)
+//					
+//			}
+//			
+//		}
+		
+		
 		return sortedResult;
 	}
 
@@ -697,7 +822,7 @@ public class ModelGenerator {
 	 * @throws IOException
 	 */
 	public void saveNDCGTopK(String evalPath, HashMap<String, List<Instance>> sortedResultByPredictedScore,
-			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off,
+			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off, int actualIndex,
 			HashMap<Integer, List<String>> listResultTopK) throws IOException {
 		File file = new File(evalPath);
 		file.getParentFile().mkdirs();
@@ -708,8 +833,7 @@ public class ModelGenerator {
 			String[] headerRecord = { "newsId", "NDCG" };
 			csvWriter.writeNext(headerRecord);
 
-			List<String[]> listNDCGTopK = calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore,
-					topK, cut_off);
+			List<String[]> listNDCGTopK = calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore, topK, cut_off, actualIndex);
 			String[] avg = listNDCGTopK.get(listNDCGTopK.size() - 1);
 			csvWriter.writeNext(avg);
 			listResultTopK.get(topK).add(avg[1]);
@@ -1094,7 +1218,7 @@ public class ModelGenerator {
 	 * @throws IOException
 	 */
 	public List<String[]> calculateNDCGTopK(HashMap<String, List<Instance>> sortedResultByPredictedScore,
-			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off) throws IOException {
+			HashMap<String, List<Instance>> sortedResultByActualScore, int topK, double cut_off, int actualIndex) throws IOException {
 		List<String[]> listNDCGTopK = new ArrayList<>();
 		double sumNDCG = 0;
 		double avgNDCG = 0;
@@ -1113,14 +1237,14 @@ public class ModelGenerator {
 			// Tinh DCGp
 			for (int i = 0; i < maxIndex; i++) {
 				Instance record = recordsDCG.get(i);
-				double reli = record.value(3);
+				double reli = record.value(actualIndex);
 				double dcg = reli / (Math.log(i + 2) / Math.log(2));
 				dcgp = dcgp + dcg;
 			}
 			// Tinh iDCGp
 			for (int i = 0; i < maxIndex; i++) {
 				Instance record = recordsIDCG.get(i);
-				double reli = record.value(3);
+				double reli = record.value(actualIndex);
 				double idcg = reli / (Math.log(i + 2) / Math.log(2));
 				idcgp = idcgp + idcg;
 			}
@@ -1129,6 +1253,7 @@ public class ModelGenerator {
 				ndcgp = 0;
 			else
 				ndcgp = dcgp / idcgp;
+			
 			listNDCGTopK.add(new String[] { newsId1, Double.toString(ndcgp) });
 			sumNDCG = sumNDCG + ndcgp;
 		}
@@ -1364,10 +1489,22 @@ public class ModelGenerator {
 		System.out.println("Start");
 		ModelGenerator mg = new ModelGenerator();
 		// Chia du lieu Train va Test
-		String dataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Train/dataset1/d1_features_ne_3110.csv";
-		String outPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Test/dataset1/ne/CV10";
-		mg.createCVDataset(dataPath, outPath, 10);		
+//		String dataPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Train/dataset1/d1_features_ne_3110.csv";
+//		String outPath = "C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Test/dataset1/ne/CV10";
+//		mg.createCVDataset(dataPath, outPath, 10);		
 		// ----//
+//		String EVALPATH = "C:/Users/ADMIN/workspace/wekaml/wekaml/result/SVR/event";
+//		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+//				.sortResultByAttributes(EVALPATH + "/result_Id_score_label.csv", 2, 3);
+		
+//		String EVALPATH = "C:/Users/ADMIN/Desktop";
+//		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+//				.sortResultByAttributes(EVALPATH + "/score.txt", 2, 3);
+//		List<Instance> a = sortedResultByPredictedScore.get("d416072");
+//		for(int i=0;i<10;i++)
+//			System.out.println(a.get(i));
+//		mg.saveSortedResult(EVALPATH + "/yyy.csv", sortedResultByPredictedScore);
+		
 		System.out.println("(((o(*ﾟ▽ﾟ*)o)))");
 
 	}

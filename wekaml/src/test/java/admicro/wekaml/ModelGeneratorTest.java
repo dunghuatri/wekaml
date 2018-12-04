@@ -36,7 +36,7 @@ public class ModelGeneratorTest extends TestCase {
 				.sortResultByAttribute("test_case/inputNDCG.csv", 2);
 		HashMap<String, List<Instance>> sortedResultByActualScore = mg
 				.sortResultByAttribute("test_case/inputNDCG.csv", 3);
-		List<String[]> listResult = mg.calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore, 10,0);
+		List<String[]> listResult = mg.calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore, 10,0,3);
 		String actualId = listResult.get(0)[0];
 		String actialValue = listResult.get(0)[1];
 		String expectedId = "1";

@@ -90,7 +90,7 @@ public class Test_ModelGenerator {
 				mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(k) + ".csv",
 						sortedResultByPredictedScore, k, cut_off, listResultTopK);
 				mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(k) + ".csv", sortedResultByPredictedScore,
-						sortedResultByActualScore, k, cut_off, listResultTopK);
+						sortedResultByActualScore, k, cut_off, 3, listResultTopK);
 				mg.saveEvaluationNoTime(sortedResultByPredictedScore,
 						modelPath + "/eval_" + Integer.toString(k) + ".txt", modelPath + "/result_Id_label.csv", k,
 						listResultTopK);
@@ -114,7 +114,7 @@ public class Test_ModelGenerator {
 		topK.add(4);
 		topK.add(5);
 		topK.add(10);
-		double cut_off = 0.18;
+		double cut_off = 0;
 
 		List<String> listCriteria = new ArrayList<>();
 
@@ -123,7 +123,7 @@ public class Test_ModelGenerator {
 		listCriteria.add("topic");
 		listCriteria.add("ne");
 
-		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/26_11_2018/TestSVC/";
+		String RESULTPATH = "C:/Users/ADMIN/Desktop/Demo/result_tfidf/26_11_2018/Test_label0/Full/";
 
 		for (int index = 0; index < listCriteria.size(); index++) {
 			String modelPath = RESULTPATH + listCriteria.get(index);
@@ -131,9 +131,9 @@ public class Test_ModelGenerator {
 			System.out.println(listCriteria.get(index));
 
 			mg.convertScoreToLabelWithId(modelPath + "/result_Id_score.csv", modelPath + "/result_Id_label.csv", cut_off);			
-			mg.saveEvaluationNoTimeSVC(modelPath + "/eval.txt", modelPath + "/result_Id_label.csv");
+//			mg.saveEvaluationNoTimeSVC(modelPath + "/eval.txt", modelPath + "/result_Id_label.csv");
 
-			/*// Sort result
+			// Sort result
 			HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
 					.sortResultByAttribute(modelPath + "/result_Id_score.csv", 2);
 			mg.saveSortedResult(modelPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
@@ -147,12 +147,12 @@ public class Test_ModelGenerator {
 				mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(k) + ".csv",
 						sortedResultByPredictedScore, k, cut_off, listResultTopK);
 				mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(k) + ".csv", sortedResultByPredictedScore,
-						sortedResultByActualScore, k, cut_off, listResultTopK);
+						sortedResultByActualScore, k, cut_off, 3, listResultTopK);
 				mg.saveEvaluationNoTime(sortedResultByPredictedScore,
 						modelPath + "/eval_" + Integer.toString(k) + ".txt", modelPath + "/result_Id_label.csv", k,
 						listResultTopK);
 			}
-			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);*/
+			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
 		}
 	}
 
@@ -168,7 +168,7 @@ public class Test_ModelGenerator {
 		HashMap<String, List<Instance>> sortedResultByActualScore = mg.sortResultByAttribute("test_case/inputNDCG.csv",
 				3);
 		List<String[]> listResult = mg.calculateNDCGTopK(sortedResultByPredictedScore, sortedResultByActualScore, 10,
-				0);
+				0, 3);
 		for (int i = 0; i < listResult.size(); i++) {
 			System.out.println(listResult.get(i)[0] + "-->" + listResult.get(i)[1]);
 		}
