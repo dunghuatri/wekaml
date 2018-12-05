@@ -202,13 +202,13 @@ public class StartWeka {
 				listResultTopK.put(topK, listResult);
 				mg.saveEvaluationTopK(
 						EVALPATH + "/Fold_" + Integer.toString(n) + "_evalTopK_" + Integer.toString(topK) + ".csv",
-						sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+						sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
 				mg.saveNDCGTopK(
 						EVALPATH + "/Fold_" + Integer.toString(n) + "_NDCGTopK" + Integer.toString(topK) + ".csv",
 						sortedResultByPredictedScore, sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
 				mg.saveEvaluation(eval, sortedResultByPredictedScore,
 						EVALPATH + "/Fold_" + Integer.toString(n) + "_eval_" + Integer.toString(topK) + ".txt",
-						RESULTPATH + "/Fold_" + Integer.toString(n) + "_result_Id_label.csv", topK, listResultTopK);
+						RESULTPATH + "/Fold_" + Integer.toString(n) + "_result_Id_label.csv", topK, listResultTopK, 2, 3);
 			}
 			mg.saveEvaluationSumary(EVALPATH + "/Fold_" + Integer.toString(n) + "_evalSumary.csv", listResultTopK);
 			mg.evaluationSumaryCV(listResultTopK, listResultTopKCV);
@@ -457,8 +457,8 @@ public class StartWeka {
 		startTime = System.currentTimeMillis();
 		// -------------------------------------------//
 		filter.setInputFormat(preprocessedData);
-		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		// Instances datasetnor = preprocessedData;
+//		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
+		 Instances datasetnor = preprocessedData;
 		// -------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime - startTime;
@@ -778,12 +778,12 @@ public class StartWeka {
 			List<String> listResult = new ArrayList<>();
 			listResultTopK.put(topK, listResult);
 			mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
 			mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
 					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
 			mg.saveEvaluation(eval, sortedResultByPredictedScore,
 					modelPath + "/eval_" + Integer.toString(topK) + ".txt", modelPath + "/result_Id_label.csv", topK,
-					listResultTopK);
+					listResultTopK, 2, 3);
 		}
 		mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
 		// -------------------------------------------//
@@ -881,12 +881,12 @@ public class StartWeka {
 			List<String> listResult = new ArrayList<>();
 			listResultTopK.put(topK, listResult);
 			mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
 			mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
 					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
 			mg.saveEvaluation(eval, sortedResultByPredictedScore,
 					modelPath + "/eval_" + Integer.toString(topK) + ".txt", modelPath + "/result_Id_label.csv", topK,
-					listResultTopK);
+					listResultTopK, 2, 3);
 		}
 		mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
 		// -------------------------------------------//
@@ -993,11 +993,11 @@ public class StartWeka {
 			List<String> listResult = new ArrayList<>();
 			listResultTopK.put(topK, listResult);
 			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
 			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
 					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
 			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK);
+					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
 		}
 		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
 		// -------------------------------------------//
@@ -1041,10 +1041,11 @@ public class StartWeka {
 		startTime = System.currentTimeMillis();
 		// -------------------------------------------//
 		filterTrain.setInputFormat(preprocessedTrainData);
-		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
+//		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
+		Instances datasetnorTrain = preprocessedTrainData;
 		filterTest.setInputFormat(preprocessedTestData);
-		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-
+//		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
+		Instances datasetnorTest = preprocessedTestData;
 		// -------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime - startTime;
@@ -1267,7 +1268,7 @@ public class StartWeka {
 		// -------------------------------------------//
 		mg.savePredictedWithId(testDataSvr, evalSvr, resultSvrPath + "/result_Id_score.csv");
 		mg.convertScoreToLabelWithId(resultSvrPath + "/result_Id_score.csv", resultSvrPath + "/result_Id_label.csv", cut_off);
-		mg.combineAndSaveResult(resultSvrPath + "/result_Id_score.csv", resultSvcPath + "/result_Id_label.csv", resultSvrPath + "/result_Id_score_label.csv");
+		mg.combineAndSaveResult(resultSvrPath + "/result_Id_score.csv", resultSvcPath + "/result_Id_label.csv", 2, 2, 3,resultSvrPath + "/result_Id_score_label.csv");
 		// -------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime - startTime;
@@ -1292,13 +1293,143 @@ public class StartWeka {
 			List<String> listResult = new ArrayList<>();
 			listResultTopK.put(topK, listResult);
 			mg.saveEvaluationTopK(evalSvrPath + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 3, 4);
 			mg.saveNDCGTopK(evalSvrPath + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
 					sortedResultByActualScore, topK, cut_off, 4, listResultTopK);
 			mg.saveEvaluation(evalSvr, sortedResultByPredictedScore, evalSvrPath + "/eval_" + Integer.toString(topK) + ".txt",
-					resultSvrPath + "/result_Id_label.csv", topK, listResultTopK);
+					resultSvrPath + "/result_Id_label.csv", topK, listResultTopK, 2, 4);
 		}
 		mg.saveEvaluationSumary(evalSvrPath + "/evalSumary.csv", listResultTopK);
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+	}
+	
+	public void testSvcAndTfidfLeaveOneFeatureOut(String modelSvcPath, String resultSvcPath, String evalSvcPath, String trainDataPath, String testDataPath,	String featureIndex) throws Exception {
+		/* Measure time */
+		long startTime;
+		long endTime;
+		long totalTime;
+
+		ModelGenerator mg = new ModelGenerator();
+		Instances trainDataSvc = mg.loadDataset(trainDataPath);
+		// Instances testData = mg.loadDataset(testDataPath);
+		Instances testDataSvc = mg.loadDatasetWithId(testDataPath);
+
+		// Preprocess data
+		System.out.println("Preprocessing ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		Preporcess prep = new Preporcess();
+		Instances preprocessedTrainDataSvc = prep.removeFeatures(trainDataSvc, "1,2," + featureIndex);
+		Instances preprocessedTestDataSvc = prep.removeFeatures(testDataSvc, "1,2," + featureIndex);
+		preprocessedTrainDataSvc = prep.Numeric2Nominal(preprocessedTrainDataSvc,"last");
+		preprocessedTestDataSvc = prep.Numeric2Nominal(preprocessedTestDataSvc,"last");
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+
+		Filter filterTrainSvc = new Normalize();
+		Filter filterTestSvc = new Normalize();
+
+		// Normalize dataset
+		System.out.println("Normalizing ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		filterTrainSvc.setInputFormat(preprocessedTrainDataSvc);
+//		Instances datasetnorTrainSvc = Filter.useFilter(preprocessedTrainDataSvc, filterTrainSvc);
+		Instances datasetnorTrainSvc = preprocessedTrainDataSvc;
+		filterTestSvc.setInputFormat(preprocessedTestDataSvc);
+//		Instances datasetnorTestSvc = Filter.useFilter(preprocessedTestDataSvc, filterTestSvc);
+		Instances datasetnorTestSvc = preprocessedTestDataSvc;
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+
+		// Load model
+		System.out.println("Loading model ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		SMO loadedModelSvc = (SMO) mg.loadModelSVC(modelSvcPath);
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+
+		// Evaluate classifier with test dataset
+		System.out.println("Evaluating ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		Evaluation evalSvc = mg.evaluateModel(loadedModelSvc, datasetnorTrainSvc, datasetnorTestSvc);
+		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+
+		// Save predicted results
+		System.out.println("Saving results ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		mg.savePredictedWithId(testDataSvc, evalSvc, resultSvcPath + "/result_Id_score.csv");
+		mg.convertScoreToLabelWithId(resultSvcPath + "/result_Id_score.csv", resultSvcPath + "/result_Id_label.csv", cut_off);
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+		
+		// Save evaluation
+		System.out.println("Saving evaluation ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		mg.saveEvaluationSVC(evalSvc, evalSvcPath + "/eval.txt", resultSvcPath + "/result_Id_label.csv");
+		mg.saveEvaluationSVC2(evalSvcPath + "/eval_brief.txt", resultSvcPath + "/result_Id_label.csv");				
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+		
+		//=========================================================//
+		
+		// Save predicted results
+		System.out.println("Saving results ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//		
+		mg.combineAndSaveResult(testDataPath, resultSvcPath + "/result_Id_label.csv", 16, 2, 3, resultSvcPath + "/result_Id_score_label.csv");
+		// -------------------------------------------//
+		endTime = System.currentTimeMillis();
+		totalTime = endTime - startTime;
+		System.out.println("done " + totalTime / 1000 + " s");
+
+		// Save evaluation
+		System.out.println("Saving evaluation ...");
+		startTime = System.currentTimeMillis();
+		// -------------------------------------------//
+		// Sort result
+		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
+				.sortResultByAttributes(resultSvcPath + "/result_Id_score_label.csv", 2, 3);
+		mg.saveSortedResultSvcSvr(evalSvcPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);		
+		// Filter wrong results
+		HashMap<String, List<Instance>> wrongResults = mg.filterWrongResults(sortedResultByPredictedScore, 10);
+		mg.saveSortedResult(resultSvcPath + "/wrong_Results.csv", wrongResults);
+		HashMap<String, List<Instance>> sortedResultByActualScore = mg
+				.sortResultByAttribute(resultSvcPath + "/result_Id_score_label.csv", 4);
+
+		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
+		for (int topK : this.topK) {
+			List<String> listResult = new ArrayList<>();
+			listResultTopK.put(topK, listResult);
+			mg.saveEvaluationTopK(evalSvcPath + "/evalTopK_" + Integer.toString(topK) + ".csv",
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 3, 4);
+			mg.saveNDCGTopK(evalSvcPath + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
+					sortedResultByActualScore, topK, cut_off, 4, listResultTopK);			
+			mg.saveEvaluationNoTime(sortedResultByPredictedScore, evalSvcPath + "/eval_" + Integer.toString(topK) + ".txt",
+					resultSvcPath + "/result_Id_label.csv", topK, listResultTopK, 2, 4);
+		}
+		mg.saveEvaluationSumary(evalSvcPath + "/evalSumary.csv", listResultTopK);		
 		// -------------------------------------------//
 		endTime = System.currentTimeMillis();
 		totalTime = endTime - startTime;
@@ -1396,11 +1527,11 @@ public class StartWeka {
 			List<String> listResult = new ArrayList<>();
 			listResultTopK.put(topK, listResult);
 			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
 			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
 					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
 			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK);
+					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
 		}
 		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
 		// -------------------------------------------//
@@ -1501,11 +1632,11 @@ public class StartWeka {
 			List<String> listResult = new ArrayList<>();
 			listResultTopK.put(topK, listResult);
 			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
 			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
 					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
 			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK);
+					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
 		}
 		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
 		// -------------------------------------------//
@@ -1606,11 +1737,11 @@ public class StartWeka {
 			List<String> listResult = new ArrayList<>();
 			listResultTopK.put(topK, listResult);
 			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
+					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
 			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
 					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
 			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK);
+					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
 		}
 		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
 		// -------------------------------------------//
@@ -1830,17 +1961,17 @@ public class StartWeka {
 		List<String> listTestPath = new ArrayList<>();
 
 		// Train Dataset1
-		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/event.csv");
-		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/topic.csv");
-		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/ne.csv");		
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Test/dataset1/0.05/event/Train_balance_event.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Test/dataset1/0.05/topic/Train_balance_topic.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Test/dataset1/0.05/ne/Train_balance_ne.csv");		
 //		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
 //		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
 //		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
 
 		// Test
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/event.csv");
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/topic.csv");
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Train/dataset1/ne.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Test/dataset1/0.05/event/Test_balance_event.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Test/dataset1/0.05/topic/Test_balance_topic.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_04_12_2018/Test/dataset1/0.05/ne/Test_balance_ne.csv");
 //		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_event_2.csv");		
 //		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_topic_2.csv");
 //		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_SVC/features_test_ne_2.csv");
@@ -1896,9 +2027,9 @@ public class StartWeka {
 		String evalSvrPath = "";
 
 		// Train Dataset1		
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
 
 		// Test Positive
 		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_event.csv");		
@@ -1951,6 +2082,68 @@ public class StartWeka {
 			System.out.println("-----------");
 			System.out.println("Testing SVC and SVR...");			
 			wk.testSvcAndSvrLeaveOneFeatureOut(modelSvcPath, resultSvcPath, evalSvcPath, modelSvrPath, resultSvrPath, evalSvrPath, trainDataPath, testDataPath, "");
+		}
+
+	}
+	
+	public static void runSvcAndTfidf() throws Exception {
+		StartWeka wk = new StartWeka();		
+
+		List<String> listTrainPath = new ArrayList<>();
+		List<String> listTestPath = new ArrayList<>();
+		String modelSvcPath = "";
+		String resultSvcPath = "";
+		String evalSvcPath = "";		
+
+		// Train Dataset1		
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
+		listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
+		
+		// Test Positive
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_event.csv");		
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_topic.csv");
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_ne.csv");
+
+		// Test Positive
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_event.csv");		
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_topic.csv");
+		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_ne.csv");
+		
+		for (int i = 0; i < listTrainPath.size(); i++) {
+			String trainDataPath = listTrainPath.get(i);
+			String testDataPath = listTestPath.get(i);
+			
+			switch (i) {
+			case 0:
+				resultSvcPath = "result/SVC/event";
+				modelSvcPath = "result/SVC/event/model.bin";
+				evalSvcPath = resultSvcPath;
+				System.out.println("----Event----");
+				break;
+			case 1:
+				resultSvcPath = "result/SVC/topic";
+				modelSvcPath = "result/SVC/topic/model.bin";
+				evalSvcPath = resultSvcPath;
+				System.out.println("----Topic----");
+				break;
+			case 2:
+				resultSvcPath = "result/SVC/ne";
+				modelSvcPath = "result/SVC/ne/model.bin";
+				evalSvcPath = resultSvcPath;
+				System.out.println("----NE----");
+				break;
+			default:
+				break;
+			}
+			
+			System.out.println("-----------");
+			System.out.println("Training SVC...");
+			wk.trainSVCLeaveOneFeatureOut(trainDataPath, modelSvcPath, "");
+			
+			System.out.println("-----------");
+			System.out.println("Testing SVC and Tfidf...");			
+			wk.testSvcAndTfidfLeaveOneFeatureOut(modelSvcPath, resultSvcPath, evalSvcPath, trainDataPath, testDataPath, "");
 		}
 
 	}
@@ -2403,6 +2596,7 @@ public class StartWeka {
 		runSVC();
 //		runSVM();
 //		runSvcAndSvr();
+//		runSvcAndTfidf();
 //		runSvmLofo();
 		// runCVREPTree2();
 		// runTotal();

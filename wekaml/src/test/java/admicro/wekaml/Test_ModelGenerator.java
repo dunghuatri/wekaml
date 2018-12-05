@@ -88,12 +88,12 @@ public class Test_ModelGenerator {
 				List<String> listResult = new ArrayList<>();
 				listResultTopK.put(k, listResult);
 				mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(k) + ".csv",
-						sortedResultByPredictedScore, k, cut_off, listResultTopK);
+						sortedResultByPredictedScore, k, cut_off, listResultTopK, 2, 3);
 				mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(k) + ".csv", sortedResultByPredictedScore,
 						sortedResultByActualScore, k, cut_off, 3, listResultTopK);
 				mg.saveEvaluationNoTime(sortedResultByPredictedScore,
 						modelPath + "/eval_" + Integer.toString(k) + ".txt", modelPath + "/result_Id_label.csv", k,
-						listResultTopK);
+						listResultTopK, 2, 3);
 			}
 			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
 		}
@@ -145,12 +145,12 @@ public class Test_ModelGenerator {
 				List<String> listResult = new ArrayList<>();
 				listResultTopK.put(k, listResult);
 				mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(k) + ".csv",
-						sortedResultByPredictedScore, k, cut_off, listResultTopK);
+						sortedResultByPredictedScore, k, cut_off, listResultTopK, 2, 3);
 				mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(k) + ".csv", sortedResultByPredictedScore,
 						sortedResultByActualScore, k, cut_off, 3, listResultTopK);
 				mg.saveEvaluationNoTime(sortedResultByPredictedScore,
 						modelPath + "/eval_" + Integer.toString(k) + ".txt", modelPath + "/result_Id_label.csv", k,
-						listResultTopK);
+						listResultTopK, 2, 3);
 			}
 			mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
 		}
@@ -182,7 +182,7 @@ public class Test_ModelGenerator {
 		// Test MRR
 		ModelGenerator mg = new ModelGenerator();
 		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv", 2);
-		System.out.println(mg.calculateMRR(sortedResult, 100));
+		System.out.println(mg.calculateMRR(sortedResult, 3, 100));
 		// Output: 0.611111111111111
 	}
 
@@ -193,7 +193,7 @@ public class Test_ModelGenerator {
 		// Test RMSE
 		ModelGenerator mg = new ModelGenerator();
 		HashMap<String, List<Instance>> sortedResult = mg.sortResultByAttribute("test_case/inputMRR.csv", 2);
-		System.out.println(mg.calculateRMSE(sortedResult, 100));
+		System.out.println(mg.calculateRMSE(sortedResult, 2, 3, 100));
 		// Output: 1.9148542155126762
 	}
 
