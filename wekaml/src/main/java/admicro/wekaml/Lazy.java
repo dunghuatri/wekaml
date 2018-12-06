@@ -63,10 +63,6 @@ public class Lazy {
 	 * 
 	 * @param resultPath
 	 * @param listTailName
-	 * @param reptreeResult
-	 * @param m5pResult
-	 * @param gbrtResult
-	 * @param tfidfResult
 	 * @throws IOException
 	 */
 	public void writeData(String resultPath, List<String> listTailName,
@@ -131,9 +127,6 @@ public class Lazy {
 	 * 
 	 * @param resultPath
 	 * @param listTailName
-	 * @param reptreeResult
-	 * @param m5pResult
-	 * @param gbrtResult
 	 * @param tfidfResult
 	 * @throws IOException
 	 */

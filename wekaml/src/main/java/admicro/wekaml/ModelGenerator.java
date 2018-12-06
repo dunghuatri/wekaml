@@ -490,7 +490,6 @@ public class ModelGenerator {
 	 * Combine score with label and save result
 	 * 
 	 * @param resultPath
-	 * @param sortedResult
 	 * @throws IOException
 	 */
 	public void combineAndSaveResult(String resultScorePath, String resultLabelPath, int scoreIndex, int labelIndex, int actualIndex, String resultPath) throws IOException {		
@@ -548,7 +547,6 @@ public class ModelGenerator {
 	 * Sort results by attributes (field)
 	 * 
 	 * @param resultPath
-	 * @param attIndex
 	 * @return
 	 */
 	public HashMap<String, List<Instance>> sortResultByAttributes(String resultPath, int attScoreIndex, int attLabelIndex) {		
@@ -650,7 +648,6 @@ public class ModelGenerator {
 	 * Save evaluation SVC to file
 	 * 
 	 * @param eval
-	 * @param sortedResult
 	 * @param evalPath
 	 * @param resultPath
 	 */
@@ -740,8 +737,7 @@ public class ModelGenerator {
 	
 	/**
 	 * Save evaluation to file without running time SVC
-	 * 
-	 * @param sortedResult
+	 *
 	 * @param evalPath
 	 * @param resultPath
 	 */

@@ -35,7 +35,7 @@ import weka.filters.unsupervised.attribute.Normalize;
  *
  */
 
-public class StartWeka {
+public class StartWeka extends BaseClass{
 
 	// private static final String DATASETPATH = "data/iris.2D.arff";
 	// private static final String DATASETPATH = "data/heart.csv";
@@ -53,6 +53,7 @@ public class StartWeka {
 	private List<Integer> topK = new ArrayList<>();
 
 	public StartWeka() {
+		super();
 		topK.add(1);
 		topK.add(3);
 		topK.add(4);
@@ -107,7 +108,7 @@ public class StartWeka {
 		if (datasetnor.classAttribute().isNominal())
 			datasetnor.stratify(folds);
 
-		// List result sumary
+		// List result summary
 		HashMap<Integer, List<Double>> listResultTopKCV = new HashMap<>();
 		for (int topK : this.topK) {
 			List<Double> listResult = new ArrayList<>();
@@ -621,6 +622,10 @@ public class StartWeka {
 		// System.out.println("done " + totalTime / 1000 + " s");
 	}
 
+	public void trainSVM2(SMOreg trainModel, String trainDataPath) throws Exception {
+		BaseClass svm = new BaseClass(trainModel);
+		svm.train(trainDataPath, MODElPATH);
+	}
 	public void trainSVM(String trainDataPath) throws Exception {
 		/* Measure time */
 		long startTime;
@@ -1903,19 +1908,19 @@ public class StartWeka {
 		List<String> listTestPath = new ArrayList<>();
 
 		// Train Dataset1		
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_event.csv");
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
-		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
+		 listTrainPath.add("/home/lana/code/PostClickRecommendation/src/main/resources/output/train_data2/d1_features_event_2.csv");
+//		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
+//		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
 
 		// Test
-//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_event.csv");
+		listTestPath.add("/home/lana/code/PostClickRecommendation/src/main/resources/output/test_positive/features_082017_pos_event.csv");
 //		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_topic.csv");
 //		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_ne.csv");
 
 		// Test Positive
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_event.csv");
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_topic.csv");
-		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_ne.csv");		
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_event.csv");
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_topic.csv");
+//		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/Positive/testset_features_pos_ne.csv");
 		
 		for (int i = 0; i < listTrainPath.size(); i++) {
 			String trainDataPath = listTrainPath.get(i);
@@ -1947,7 +1952,9 @@ public class StartWeka {
 			}
 			
 			System.out.println("Training SVM...");
-			wk.trainSVMLeaveOneFeatureOut(trainDataPath, MODElPATH, "");
+			SMOreg trainedModel = new SMOreg();
+//			wk.trainSVM2(trainedModel,trainDataPath);
+			wk.trainSVM(trainDataPath);
 			System.out.println("Testing SVM...");
 			wk.testSVMLeaveOneFeatureOut(MODElPATH, trainDataPath, testDataPath, "");
 		}
@@ -2593,9 +2600,9 @@ public class StartWeka {
 		// TREEPATH = args[4];
 		// runREPTree();
 		// runM5P();
-		runSVC();
-//		runSVM();
-//		runSvcAndSvr();
+//		runSVC();
+		runSVM();
+//		runScó vcAndSvr();
 //		runSvcAndTfidf();
 //		runSvmLofo();
 		// runCVREPTree2();
