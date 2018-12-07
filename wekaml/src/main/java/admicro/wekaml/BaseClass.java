@@ -3,6 +3,7 @@ package admicro.wekaml;
 import weka.classifiers.Classifier;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.functions.SMOreg;
+import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.core.Debug;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -13,6 +14,8 @@ import weka.filters.unsupervised.attribute.Normalize;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BaseClass<T> {
     private T object;
@@ -21,7 +24,9 @@ public class BaseClass<T> {
         this.object = object;
     }
 
-    public void train(String trainDataPath, String modelPath) throws Exception {
+    //if featureIndex = -1 --> normal train
+    //if featureIndex != -1 --> train LOFO
+    public void train(String trainDataPath, String modelPath, String featureIndex) throws Exception {
         /* Measure time */
         long startTime;
         long endTime;
@@ -35,7 +40,12 @@ public class BaseClass<T> {
         startTime = System.currentTimeMillis();
         // -------------------------------------------//
         Preporcess prep = new Preporcess();
-        Instances preprocessedData = prep.removeFeatures(trainData, "1-2");
+        Instances preprocessedData = null;
+        if(featureIndex == null){
+            preprocessedData = prep.removeFeatures(trainData, "1-2");
+        }else{
+            preprocessedData = prep.removeFeatures(trainData, "1,2," + featureIndex);
+        }
         preprocessedData.randomize(new Debug.Random(1));
         // Instances preprocessedData = trainData;
         // -------------------------------------------//
@@ -77,8 +87,8 @@ public class BaseClass<T> {
         totalTime = endTime - startTime;
         System.out.println("done " + totalTime / 1000 + " s");
     }
-    public void test(String modelPath, String trainDataPath, String testDataPath,
-                     String EVALPATH, String RESULTPATH, Double cut_off, List<Integer> topKList) throws Exception {
+    public void test(String modelPath, String trainDataPath, String testDataPath, String EVALPATH,
+                     String RESULTPATH, Double cut_off, List<Integer> topKList, String featureIndex) throws Exception {
         /* Measure time */
         long startTime;
         long endTime;
@@ -94,9 +104,16 @@ public class BaseClass<T> {
         startTime = System.currentTimeMillis();
         // -------------------------------------------//
         Preporcess prep = new Preporcess();
-        Instances preprocessedTrainData = prep.removeFeatures(trainData, "1-2");
-        Instances preprocessedTestData = prep.removeFeatures(testData, "1-2");
+        Instances preprocessedTrainData = null;
+        Instances preprocessedTestData = null;
 
+        if(featureIndex == null){
+            preprocessedTrainData = prep.removeFeatures(trainData, "1-2");
+            preprocessedTestData = prep.removeFeatures(testData, "1-2");
+        }else{
+            preprocessedTrainData = prep.removeFeatures(trainData, "1-2" + featureIndex);
+            preprocessedTestData = prep.removeFeatures(testData, "1-2" + featureIndex);
+        }
         // -------------------------------------------//
         endTime = System.currentTimeMillis();
         totalTime = endTime - startTime;
@@ -123,7 +140,7 @@ public class BaseClass<T> {
         System.out.println("Loading model ...");
         startTime = System.currentTimeMillis();
         // -------------------------------------------//
-        object = (T) mg.loadModelSVM(modelPath);
+        object = (T) mg.loadModel(modelPath);
         // -------------------------------------------//
         endTime = System.currentTimeMillis();
         totalTime = endTime - startTime;
@@ -191,4 +208,6 @@ public class BaseClass<T> {
         }
         return (Classifier) object;
     }
+
+
 }

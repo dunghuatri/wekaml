@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.sun.org.apache.regexp.internal.RE;
 import guru.nidi.graphviz.attribute.Color;
 import guru.nidi.graphviz.attribute.Style;
 import guru.nidi.graphviz.engine.Format;
@@ -157,7 +158,7 @@ public class StartWeka extends BaseClass{
 			System.out.println("Loading model ...");
 			startTime = System.currentTimeMillis();
 			// -------------------------------------------//
-			REPTree loadedModel = (REPTree) mg.loadModelREPTree(MODElPATH);
+			REPTree loadedModel = (REPTree) mg.loadModel(MODElPATH);
 			// -------------------------------------------//
 			endTime = System.currentTimeMillis();
 			totalTime = endTime - startTime;
@@ -221,906 +222,57 @@ public class StartWeka extends BaseClass{
 		mg.saveEvaluationSumaryCV(EVALPATH + "/evalSumaryCV.csv", listResultTopKCV, folds);
 	}
 
-	public void trainREPTreeLeaveOneFeatureOut(String trainDataPath, int featureIndex, String modelPath)
-			throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedData = prep.removeFeatures(trainData, "1,2," + Integer.toString(featureIndex));
-		preprocessedData.randomize(new Debug.Random(1));
-		// Instances preprocessedData = trainData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filter = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filter.setInputFormat(preprocessedData);
-		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		// Instances datasetnor = preprocessedData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// build classifier with train dataset
-		System.out.println("Building model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		REPTree trainedModel = (REPTree) mg.buildClassifierREPTree(datasetnor);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save model
-		System.out.println("Saving model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveModel(trainedModel, modelPath + "/model.bin");
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Show tree
-		System.out.println("Showing tree ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.showTree(trainedModel, modelPath);
-		// createDotGraph(modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void trainLOFO(REPTree trainModel, String trainDataPath, String modelPath, String featureIndex) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.train(trainDataPath, modelPath, featureIndex);
+	}
+	public void trainLOFO(M5P trainModel, String trainDataPath, String modelPath, String featureIndex) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.train(trainDataPath, modelPath, featureIndex);
+	}
+	public void trainLOFO(SMOreg trainModel, String trainDataPath, String modelPath, String featureIndex) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.train(trainDataPath, modelPath, featureIndex);
+	}
+	public void trainLOFO(SMO trainModel, String trainDataPath, String modelPath, String featureIndex) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.train(trainDataPath, modelPath, featureIndex);
 	}
 
-	public void trainM5PLeaveOneFeatureOut(String trainDataPath, int featureIndex, String modelPath) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedData = prep.removeFeatures(trainData, "1,2," + Integer.toString(featureIndex));
-		preprocessedData.randomize(new Debug.Random(1));
-		// Instances preprocessedData = trainData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filter = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filter.setInputFormat(preprocessedData);
-		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		// Instances datasetnor = preprocessedData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// build classifier with train dataset
-		System.out.println("Building model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		M5P trainedModel = (M5P) mg.buildClassifierM5P(datasetnor);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save model
-		System.out.println("Saving model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveModel(trainedModel, modelPath + "/model.bin");
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Show tree
-		System.out.println("Showing tree ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.showTree(trainedModel, modelPath);
-		// createDotGraph(modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void trainModel(REPTree trainModel, String modelPath, String trainDataPath) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.train(trainDataPath, modelPath, null);
 	}
 
-	public void trainSVMLeaveOneFeatureOut(String trainDataPath, String modelPath, String featureIndex) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedData = prep.removeFeatures(trainData, "1,2," + featureIndex);
-		// preprocessedData = prep.Numeric2Nominal(preprocessedData, "last");
-		preprocessedData.randomize(new Debug.Random(1));
-		// Instances preprocessedData = trainData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filter = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filter.setInputFormat(preprocessedData);
-		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		// Instances datasetnor = preprocessedData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// build classifier with train dataset
-		System.out.println("Building model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		SMOreg trainedModel = (SMOreg) mg.buildClassifierSVM(datasetnor);
-		// SMO trainedModel = (SMO) mg.buildClassifierSVM(datasetnor);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save model
-		System.out.println("Saving model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveModel(trainedModel, modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Show tree
-		// System.out.println("Showing tree ...");
-		// startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// mg.showTree(trainedModel, TREEPATH);
-		// createDotGraph(TREEPATH);
-		// -------------------------------------------//
-		// endTime = System.currentTimeMillis();
-		// totalTime = endTime - startTime;
-		// System.out.println("done " + totalTime / 1000 + " s");
-	}
-	
-	public void trainSVCLeaveOneFeatureOut(String trainDataPath, String modelPath, String featureIndex) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedData = prep.removeFeatures(trainData, "1,2," + featureIndex);
-		preprocessedData = prep.Numeric2Nominal(preprocessedData, "last");
-		preprocessedData.randomize(new Debug.Random(1));
-		// Instances preprocessedData = trainData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filter = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filter.setInputFormat(preprocessedData);
-//		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		 Instances datasetnor = preprocessedData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// build classifier with train dataset
-		System.out.println("Building model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		SMO trainedModel = (SMO) mg.buildClassifierSVC(datasetnor);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save model
-		System.out.println("Saving model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveModel(trainedModel, modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void trainModel(M5P trainModel, String modelPath, String trainDataPath) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.train(trainDataPath, modelPath, null);
 	}
 
-	public void trainREPTree(String trainDataPath) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedData = prep.removeFeatures(trainData, "1-2");
-		preprocessedData.randomize(new Debug.Random(1));
-		// Instances preprocessedData = trainData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filter = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filter.setInputFormat(preprocessedData);
-		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		// Instances datasetnor = preprocessedData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// build classifier with train dataset
-		System.out.println("Building model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		REPTree trainedModel = (REPTree) mg.buildClassifierREPTree(datasetnor);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save model
-		System.out.println("Saving model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveModel(trainedModel, MODElPATH);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Show tree
-		// System.out.println("Showing tree ...");
-		// startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// mg.showTree(trainedModel, TREEPATH);
-		// createDotGraph(TREEPATH);
-		// -------------------------------------------//
-		// endTime = System.currentTimeMillis();
-		// totalTime = endTime - startTime;
-		// System.out.println("done " + totalTime / 1000 + " s");
-	}
-
-	public void trainM5P(String trainDataPath) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedData = prep.removeFeatures(trainData, "1-2");
-		preprocessedData.randomize(new Debug.Random(1));
-		// Instances preprocessedData = trainData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filter = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filter.setInputFormat(preprocessedData);
-		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		// Instances datasetnor = preprocessedData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// build classifier with train dataset
-		System.out.println("Building model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		M5P trainedModel = (M5P) mg.buildClassifierM5P(datasetnor);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save model
-		System.out.println("Saving model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveModel(trainedModel, MODElPATH);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Show tree
-		// System.out.println("Showing tree ...");
-		// startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// mg.showTree(trainedModel, TREEPATH);
-		// createDotGraph(TREEPATH);
-		// -------------------------------------------//
-		// endTime = System.currentTimeMillis();
-		// totalTime = endTime - startTime;
-		// System.out.println("done " + totalTime / 1000 + " s");
-	}
-
-	public void trainSVM2(SMOreg trainModel, String trainDataPath) throws Exception {
+	public void trainModel(SMOreg trainModel, String modelPath, String trainDataPath) throws Exception {
 		BaseClass svm = new BaseClass(trainModel);
-		svm.train(trainDataPath, MODElPATH);
-	}
-	public void trainSVM(String trainDataPath) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedData = prep.removeFeatures(trainData, "1-2");
-		preprocessedData.randomize(new Debug.Random(1));
-		// Instances preprocessedData = trainData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filter = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filter.setInputFormat(preprocessedData);
-		Instances datasetnor = Filter.useFilter(preprocessedData, filter);
-		// Instances datasetnor = preprocessedData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// build classifier with train dataset
-		System.out.println("Building model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		SMOreg trainedModel = (SMOreg) mg.buildClassifierSVM(datasetnor);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save model
-		System.out.println("Saving model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveModel(trainedModel, MODElPATH);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Show tree
-		// System.out.println("Showing tree ...");
-		// startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// mg.showTree(trainedModel, TREEPATH);
-		// createDotGraph(TREEPATH);
-		// -------------------------------------------//
-		// endTime = System.currentTimeMillis();
-		// totalTime = endTime - startTime;
-		// System.out.println("done " + totalTime / 1000 + " s");
+		svm.train(trainDataPath, modelPath, null);
 	}
 
-	public void testREPTreeLeaveOneFeatureOut(String modelPath, String trainDataPath, String testDataPath,
-			int featureIndex) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-		// Instances testData = mg.loadDataset(testDataPath);
-		Instances testData = mg.loadDatasetWithId(testDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1,2," + Integer.toString(featureIndex));
-		Instances preprocessedTestData = prep.removeFeatures(testData, "1,2," + Integer.toString(featureIndex));
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filterTrain = new Normalize();
-		Filter filterTest = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filterTrain.setInputFormat(preprocessedTrainData);
-		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
-		filterTest.setInputFormat(preprocessedTestData);
-		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Load model
-		System.out.println("Loading model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		REPTree loadedModel = (REPTree) mg.loadModelREPTree(modelPath + "/model.bin");
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Evaluate classifier with test dataset
-		System.out.println("Evaluating ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
-		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save predicted results
-		System.out.println("Saving results ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.savePredictedWithId(testData, eval, modelPath + "/result_Id_score.csv");
-		mg.convertScoreToLabelWithId(modelPath + "/result_Id_score.csv", modelPath + "/result_Id_label.csv", cut_off);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save evaluation
-		System.out.println("Saving evaluation ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(modelPath + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(modelPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(modelPath + "/result_Id_score.csv", 3);
-		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
-		for (int topK : this.topK) {
-			List<String> listResult = new ArrayList<>();
-			listResultTopK.put(topK, listResult);
-			mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
-			mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
-					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
-			mg.saveEvaluation(eval, sortedResultByPredictedScore,
-					modelPath + "/eval_" + Integer.toString(topK) + ".txt", modelPath + "/result_Id_label.csv", topK,
-					listResultTopK, 2, 3);
-		}
-		mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void testLOFO(REPTree trainModel, String modelPath, String trainDataPath, String testDataPath,
+						 String evalPath, String resultPath, String featureIndex) throws Exception {
+		BaseClass svm = new BaseClass(trainModel);
+		svm.test(modelPath, trainDataPath,testDataPath,evalPath, resultPath, cut_off,topK, featureIndex);
 	}
-
-	public void testM5PLeaveOneFeatureOut(String modelPath, String trainDataPath, String testDataPath, int featureIndex)
-			throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-		// Instances testData = mg.loadDataset(testDataPath);
-		Instances testData = mg.loadDatasetWithId(testDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1,2," + Integer.toString(featureIndex));
-		Instances preprocessedTestData = prep.removeFeatures(testData, "1,2," + Integer.toString(featureIndex));
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filterTrain = new Normalize();
-		Filter filterTest = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filterTrain.setInputFormat(preprocessedTrainData);
-		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
-		filterTest.setInputFormat(preprocessedTestData);
-		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Load model
-		System.out.println("Loading model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		M5P loadedModel = (M5P) mg.loadModelM5P(modelPath + "/model.bin");
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Evaluate classifier with test dataset
-		System.out.println("Evaluating ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
-		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save predicted results
-		System.out.println("Saving results ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.savePredictedWithId(testData, eval, modelPath + "/result_Id_score.csv");
-		mg.convertScoreToLabelWithId(modelPath + "/result_Id_score.csv", modelPath + "/result_Id_label.csv", cut_off);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save evaluation
-		System.out.println("Saving evaluation ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(modelPath + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(modelPath + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(modelPath + "/result_Id_score.csv", 3);
-		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
-		for (int topK : this.topK) {
-			List<String> listResult = new ArrayList<>();
-			listResultTopK.put(topK, listResult);
-			mg.saveEvaluationTopK(modelPath + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
-			mg.saveNDCGTopK(modelPath + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
-					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
-			mg.saveEvaluation(eval, sortedResultByPredictedScore,
-					modelPath + "/eval_" + Integer.toString(topK) + ".txt", modelPath + "/result_Id_label.csv", topK,
-					listResultTopK, 2, 3);
-		}
-		mg.saveEvaluationSumary(modelPath + "/evalSumary.csv", listResultTopK);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void testLOFO(M5P trainModel, String modelPath, String trainDataPath, String testDataPath,
+						 String evalPath, String resultPath, String featureIndex) throws Exception {
+		BaseClass svm = new BaseClass(trainModel);
+		svm.test(modelPath, trainDataPath,testDataPath,evalPath, resultPath, cut_off,topK, featureIndex);
 	}
-
-	public void testSVMLeaveOneFeatureOut(String modelPath, String trainDataPath, String testDataPath,
-			String featureIndex) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-		// Instances testData = mg.loadDataset(testDataPath);
-		Instances testData = mg.loadDatasetWithId(testDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1,2," + featureIndex);
-		Instances preprocessedTestData = prep.removeFeatures(testData, "1,2," + featureIndex);
-		// preprocessedTrainData = prep.Numeric2Nominal(preprocessedTrainData,
-		// "last");
-		// preprocessedTestData = prep.Numeric2Nominal(preprocessedTestData,
-		// "last");
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filterTrain = new Normalize();
-		Filter filterTest = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filterTrain.setInputFormat(preprocessedTrainData);
-		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
-		filterTest.setInputFormat(preprocessedTestData);
-		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Load model
-		System.out.println("Loading model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		SMOreg loadedModel = (SMOreg) mg.loadModelSVM(modelPath);
-		// SMO loadedModel = (SMO) mg.loadModelSVM(modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Evaluate classifier with test dataset
-		System.out.println("Evaluating ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
-		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save predicted results
-		System.out.println("Saving results ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.savePredictedWithId(testData, eval, RESULTPATH + "/result_Id_score.csv");
-		mg.convertScoreToLabelWithId(RESULTPATH + "/result_Id_score.csv", RESULTPATH + "/result_Id_label.csv", cut_off);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save evaluation
-		System.out.println("Saving evaluation ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(EVALPATH + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		// Filter wrong results
-		HashMap<String, List<Instance>> wrongResults = mg.filterWrongResults(sortedResultByPredictedScore, 10);
-		mg.saveSortedResult(EVALPATH + "/wrong_Results.csv", wrongResults);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 3);
-
-		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
-		for (int topK : this.topK) {
-			List<String> listResult = new ArrayList<>();
-			listResultTopK.put(topK, listResult);
-			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
-			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
-					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
-			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
-		}
-		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void testLOFO(SMO trainModel, String modelPath, String trainDataPath, String testDataPath,
+						 String evalPath, String resultPath, String featureIndex) throws Exception {
+		BaseClass svm = new BaseClass(trainModel);
+		svm.test(modelPath, trainDataPath,testDataPath,evalPath, resultPath, cut_off,topK, featureIndex);
 	}
-	
-	public void testSVCLeaveOneFeatureOut(String modelPath, String trainDataPath, String testDataPath,
-			String featureIndex) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-		// Instances testData = mg.loadDataset(testDataPath);
-		Instances testData = mg.loadDatasetWithId(testDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1,2," + featureIndex);
-		Instances preprocessedTestData = prep.removeFeatures(testData, "1,2," + featureIndex);
-		preprocessedTrainData = prep.Numeric2Nominal(preprocessedTrainData,"last");
-		preprocessedTestData = prep.Numeric2Nominal(preprocessedTestData,"last");
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filterTrain = new Normalize();
-		Filter filterTest = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filterTrain.setInputFormat(preprocessedTrainData);
-//		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
-		Instances datasetnorTrain = preprocessedTrainData;
-		filterTest.setInputFormat(preprocessedTestData);
-//		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-		Instances datasetnorTest = preprocessedTestData;
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Load model
-		System.out.println("Loading model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		SMO loadedModel = (SMO) mg.loadModelSVC(modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Evaluate classifier with test dataset
-		System.out.println("Evaluating ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
-		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save predicted results
-		System.out.println("Saving results ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.savePredictedWithId(testData, eval, RESULTPATH + "/result_Id_score.csv");
-		mg.convertScoreToLabelWithId(RESULTPATH + "/result_Id_score.csv", RESULTPATH + "/result_Id_label.csv", cut_off);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		
-		// Save evaluation
-		System.out.println("Saving evaluation ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.saveEvaluationSVC(eval, EVALPATH + "/eval.txt", RESULTPATH + "/result_Id_label.csv");
-		mg.saveEvaluationSVC2(EVALPATH + "/eval_brief.txt", RESULTPATH + "/result_Id_label.csv");
-		/*// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(EVALPATH + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		// Filter wrong results
-		HashMap<String, List<Instance>> wrongResults = mg.filterWrongResults(sortedResultByPredictedScore, 10);
-		mg.saveSortedResult(EVALPATH + "/wrong_Results.csv", wrongResults);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 3);
-
-		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
-		for (int topK : this.topK) {
-			List<String> listResult = new ArrayList<>();
-			listResultTopK.put(topK, listResult);
-			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK);
-			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
-					sortedResultByActualScore, topK, cut_off, listResultTopK);
-			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK);
-		}
-		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);*/		
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void testLOFO(SMOreg trainModel, String modelPath, String trainDataPath, String testDataPath,
+						 String evalPath, String resultPath, String featureIndex) throws Exception {
+		BaseClass svm = new BaseClass(trainModel);
+		svm.test(modelPath, trainDataPath, testDataPath,evalPath, resultPath, cut_off,topK, featureIndex);
 	}
 	
 	public void testSvcAndSvrLeaveOneFeatureOut(String modelSvcPath, String resultSvcPath, String evalSvcPath, String modelSvrPath, String resultSvrPath, String evalSvrPath, String trainDataPath, String testDataPath,
@@ -1441,318 +593,22 @@ public class StartWeka extends BaseClass{
 		System.out.println("done " + totalTime / 1000 + " s");
 	}
 
-	public void testREPTree(String modelPath, String trainDataPath, String testDataPath) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-		// Instances testData = mg.loadDataset(testDataPath);
-		Instances testData = mg.loadDatasetWithId(testDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1-2");
-		Instances preprocessedTestData = prep.removeFeatures(testData, "1-2");
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filterTrain = new Normalize();
-		Filter filterTest = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filterTrain.setInputFormat(preprocessedTrainData);
-		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
-		filterTest.setInputFormat(preprocessedTestData);
-		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Load model
-		System.out.println("Loading model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		REPTree loadedModel = (REPTree) mg.loadModelREPTree(modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Evaluate classifier with test dataset
-		System.out.println("Evaluating ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
-		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save predicted results
-		System.out.println("Saving results ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.savePredictedWithId(testData, eval, RESULTPATH + "/result_Id_score.csv");
-		mg.convertScoreToLabelWithId(RESULTPATH + "/result_Id_score.csv", RESULTPATH + "/result_Id_label.csv", cut_off);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save evaluation
-		System.out.println("Saving evaluation ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//		
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(EVALPATH + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		// Filter wrong results
-		HashMap<String, List<Instance>> wrongResults = mg.filterWrongResults(sortedResultByPredictedScore, 10);
-		mg.saveSortedResult(EVALPATH + "/wrong_Results.csv", wrongResults);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 3);
-		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
-		for (int topK : this.topK) {
-			List<String> listResult = new ArrayList<>();
-			listResultTopK.put(topK, listResult);
-			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
-			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
-					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
-			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
-		}
-		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void testModel(REPTree trainModel, String modelPath, String trainDataPath, String testDataPath,
+							String EVALPATH, String RESULTPATH, String featureIndex) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.test(modelPath, trainDataPath, testDataPath, EVALPATH, RESULTPATH, cut_off, topK, featureIndex);
 	}
 
-	public void testM5P(String modelPath, String trainDataPath, String testDataPath) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-		// Instances testData = mg.loadDataset(testDataPath);
-		Instances testData = mg.loadDatasetWithId(testDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1-2");
-		Instances preprocessedTestData = prep.removeFeatures(testData, "1-2");
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filterTrain = new Normalize();
-		Filter filterTest = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filterTrain.setInputFormat(preprocessedTrainData);
-		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
-		filterTest.setInputFormat(preprocessedTestData);
-		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Load model
-		System.out.println("Loading model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		M5P loadedModel = (M5P) mg.loadModelM5P(modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Evaluate classifier with test dataset
-		System.out.println("Evaluating ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
-		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save predicted results
-		System.out.println("Saving results ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.savePredictedWithId(testData, eval, RESULTPATH + "/result_Id_score.csv");
-		mg.convertScoreToLabelWithId(RESULTPATH + "/result_Id_score.csv", RESULTPATH + "/result_Id_label.csv", cut_off);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save evaluation
-		System.out.println("Saving evaluation ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(EVALPATH + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		// Filter wrong results
-		HashMap<String, List<Instance>> wrongResults = mg.filterWrongResults(sortedResultByPredictedScore, 10);
-		mg.saveSortedResult(EVALPATH + "/wrong_Results.csv", wrongResults);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 3);
-
-		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
-		for (int topK : this.topK) {
-			List<String> listResult = new ArrayList<>();
-			listResultTopK.put(topK, listResult);
-			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
-			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
-					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
-			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
-		}
-		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void testModel(M5P trainModel, String modelPath, String trainDataPath, String testDataPath,
+						String EVALPATH, String RESULTPATH, String featureIndex) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.test(modelPath, trainDataPath, testDataPath, EVALPATH, RESULTPATH, cut_off, topK, featureIndex);
 	}
 
-	public void testSVM(String modelPath, String trainDataPath, String testDataPath) throws Exception {
-		/* Measure time */
-		long startTime;
-		long endTime;
-		long totalTime;
-
-		ModelGenerator mg = new ModelGenerator();
-		Instances trainData = mg.loadDataset(trainDataPath);
-		// Instances testData = mg.loadDataset(testDataPath);
-		Instances testData = mg.loadDatasetWithId(testDataPath);
-
-		// Preprocess data
-		System.out.println("Preprocessing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Preporcess prep = new Preporcess();
-		Instances preprocessedTrainData = prep.removeFeatures(trainData, "1-2");
-		Instances preprocessedTestData = prep.removeFeatures(testData, "1-2");
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		Filter filterTrain = new Normalize();
-		Filter filterTest = new Normalize();
-
-		// Normalize dataset
-		System.out.println("Normalizing ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		filterTrain.setInputFormat(preprocessedTrainData);
-		Instances datasetnorTrain = Filter.useFilter(preprocessedTrainData, filterTrain);
-		filterTest.setInputFormat(preprocessedTestData);
-		Instances datasetnorTest = Filter.useFilter(preprocessedTestData, filterTest);
-
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Load model
-		System.out.println("Loading model ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		SMOreg loadedModel = (SMOreg) mg.loadModelSVM(modelPath);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Evaluate classifier with test dataset
-		System.out.println("Evaluating ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		Evaluation eval = mg.evaluateModel(loadedModel, datasetnorTrain, datasetnorTest);
-		// System.out.println("Evaluation: " + eval.toSummaryString("", true));
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save predicted results
-		System.out.println("Saving results ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		mg.savePredictedWithId(testData, eval, RESULTPATH + "/result_Id_score.csv");
-		mg.convertScoreToLabelWithId(RESULTPATH + "/result_Id_score.csv", RESULTPATH + "/result_Id_label.csv", cut_off);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
-
-		// Save evaluation
-		System.out.println("Saving evaluation ...");
-		startTime = System.currentTimeMillis();
-		// -------------------------------------------//
-		// Sort result
-		HashMap<String, List<Instance>> sortedResultByPredictedScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 2);
-		mg.saveSortedResult(EVALPATH + "/result_Id_score_sorted.csv", sortedResultByPredictedScore);
-		// Filter wrong results
-		HashMap<String, List<Instance>> wrongResults = mg.filterWrongResults(sortedResultByPredictedScore, 10);
-		mg.saveSortedResult(EVALPATH + "/wrong_Results.csv", wrongResults);
-		HashMap<String, List<Instance>> sortedResultByActualScore = mg
-				.sortResultByAttribute(EVALPATH + "/result_Id_score.csv", 3);
-
-		HashMap<Integer, List<String>> listResultTopK = new HashMap<>();
-		for (int topK : this.topK) {
-			List<String> listResult = new ArrayList<>();
-			listResultTopK.put(topK, listResult);
-			mg.saveEvaluationTopK(EVALPATH + "/evalTopK_" + Integer.toString(topK) + ".csv",
-					sortedResultByPredictedScore, topK, cut_off, listResultTopK, 2, 3);
-			mg.saveNDCGTopK(EVALPATH + "/NDCGTopK" + Integer.toString(topK) + ".csv", sortedResultByPredictedScore,
-					sortedResultByActualScore, topK, cut_off, 3, listResultTopK);
-			mg.saveEvaluation(eval, sortedResultByPredictedScore, EVALPATH + "/eval_" + Integer.toString(topK) + ".txt",
-					RESULTPATH + "/result_Id_label.csv", topK, listResultTopK, 2, 3);
-		}
-		mg.saveEvaluationSumary(EVALPATH + "/evalSumary.csv", listResultTopK);
-		// -------------------------------------------//
-		endTime = System.currentTimeMillis();
-		totalTime = endTime - startTime;
-		System.out.println("done " + totalTime / 1000 + " s");
+	public void testModel(SMOreg trainModel, String modelPath, String trainDataPath, String testDataPath,
+						String EVALPATH, String RESULTPATH, String featureIndex) throws Exception {
+		BaseClass baseClass = new BaseClass(trainModel);
+		baseClass.test(modelPath, trainDataPath, testDataPath, EVALPATH, RESULTPATH, cut_off, topK, featureIndex);
 	}
 
 	public static void runREPTree() throws Exception {
@@ -1769,17 +625,6 @@ public class StartWeka extends BaseClass{
 				"C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Train/dataset1/d1_features_topic_3110_NEW.csv");
 		listTrainPath.add(
 				"C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Train/dataset1/d1_features_ne_3110_NEW.csv");
-
-		// Train Dataset2
-		// listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_24_10_2018/Train/dataset2/d2_features_graph_event.csv");
-		// listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_24_10_2018/Train/dataset2/d2_features_graph_topic.csv");
-		// listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_24_10_2018/Train/dataset2/d2_features_graph_ne.csv");
-
-		// Train Dataset3
-		// listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_24_10_2018/Train/dataset3/d3_features_graph_event.csv");
-		// listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_24_10_2018/Train/dataset3/d3_features_graph_topic.csv");
-		// listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_24_10_2018/Train/dataset3/d3_features_graph_ne.csv");
-
 		// Test
 		listTestPath.add(
 				"C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_01_11_2018/Test/features_082017_ts_event_NEW.csv");
@@ -1820,10 +665,10 @@ public class StartWeka extends BaseClass{
 			default:
 				break;
 			}
-
-			wk.trainREPTree(trainDataPath);
+			REPTree trainModel = new REPTree();
+			wk.trainModel(trainModel, MODElPATH, trainDataPath);
 			System.out.println("Testing REPTree...");
-			wk.testREPTree(MODElPATH, trainDataPath, testDataPath);
+			wk.testModel(trainModel, MODElPATH, trainDataPath, testDataPath, EVALPATH, RESULTPATH, "");
 		}
 	}
 
@@ -1894,9 +739,10 @@ public class StartWeka extends BaseClass{
 				break;
 			}
 
-			wk.trainM5P(trainDataPath);
+			M5P trainModel = new M5P();
+			wk.trainModel(trainModel, MODElPATH, trainDataPath);
 			System.out.println("Testing M5P...");
-			wk.testM5P(MODElPATH, trainDataPath, testDataPath);
+			wk.testModel(trainModel, MODElPATH, trainDataPath, testDataPath, EVALPATH, RESULTPATH, null);
 		}
 
 	}
@@ -1908,12 +754,12 @@ public class StartWeka extends BaseClass{
 		List<String> listTestPath = new ArrayList<>();
 
 		// Train Dataset1		
-		 listTrainPath.add("/home/lana/code/PostClickRecommendation/src/main/resources/output/train_data2/d1_features_event_2.csv");
+		 listTrainPath.add("/home/lana/Downloads/Train/dataset1/d1_features_event.csv");
 //		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_topic.csv");
 //		 listTrainPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Train/dataset1/d1_features_ne.csv");
 
 		// Test
-		listTestPath.add("/home/lana/code/PostClickRecommendation/src/main/resources/output/test_positive/features_082017_pos_event.csv");
+		listTestPath.add("/home/lana/Downloads/Test_label0/testset_features_event.csv");
 //		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_topic.csv");
 //		listTestPath.add("C:/Users/ADMIN/Desktop/Demo/data/feature_newsId_26_11_2018/Test_label0/testset_features_ne.csv");
 
@@ -1952,11 +798,11 @@ public class StartWeka extends BaseClass{
 			}
 			
 			System.out.println("Training SVM...");
-			SMOreg trainedModel = new SMOreg();
-//			wk.trainSVM2(trainedModel,trainDataPath);
-			wk.trainSVM(trainDataPath);
+			SMOreg trainModel = new SMOreg();
+			wk.trainModel(trainModel, MODElPATH, trainDataPath);
 			System.out.println("Testing SVM...");
-			wk.testSVMLeaveOneFeatureOut(MODElPATH, trainDataPath, testDataPath, "");
+			wk.testModel(trainModel, MODElPATH, trainDataPath, testDataPath, EVALPATH, RESULTPATH, null);
+//			wk.testLOFO(trainModel, MODElPATH, trainDataPath, testDataPath, EVALPATH, RESULTPATH, "");
 		}
 
 	}
@@ -2013,10 +859,12 @@ public class StartWeka extends BaseClass{
 			}
 			System.out.println("-----------");
 			System.out.println("Training SVC...");
-			wk.trainSVCLeaveOneFeatureOut(trainDataPath, MODElPATH, "");
+			SMO trainModel = new SMO();
+			wk.trainLOFO(trainModel, trainDataPath, MODElPATH, null);
 			System.out.println("-----------");
 			System.out.println("Testing SVC...");
-			wk.testSVCLeaveOneFeatureOut(MODElPATH, trainDataPath, testDataPath, "");
+			wk.testLOFO(trainModel, MODElPATH, trainDataPath, testDataPath,
+					EVALPATH, RESULTPATH, "");
 		}
 
 	}
@@ -2078,13 +926,14 @@ public class StartWeka extends BaseClass{
 			default:
 				break;
 			}
-			
+			SMO trainModelSVC = new SMO();
+			SMOreg trainModelSVR = new SMOreg();
 			System.out.println("-----------");
 			System.out.println("Training SVC...");
-			wk.trainSVCLeaveOneFeatureOut(trainDataPath, modelSvcPath, "");
+			wk.trainLOFO(trainModelSVC, trainDataPath, modelSvcPath, null);
 			System.out.println("-----------");
 			System.out.println("Training SVR...");
-			wk.trainSVMLeaveOneFeatureOut(trainDataPath, modelSvrPath, "");
+			wk.trainLOFO(trainModelSVR, trainDataPath, modelSvrPath, null);
 			
 			System.out.println("-----------");
 			System.out.println("Testing SVC and SVR...");			
@@ -2146,7 +995,8 @@ public class StartWeka extends BaseClass{
 			
 			System.out.println("-----------");
 			System.out.println("Training SVC...");
-			wk.trainSVCLeaveOneFeatureOut(trainDataPath, modelSvcPath, "");
+			SMO trainModel = new SMO();
+			wk.trainLOFO(trainModel, trainDataPath, modelSvcPath, null);
 			
 			System.out.println("-----------");
 			System.out.println("Testing SVC and Tfidf...");			
@@ -2198,22 +1048,7 @@ public class StartWeka extends BaseClass{
 
 		// Add feature name
 		//
-//		listFeature.add("no_keyword");
-//		listFeature.add("no_cosineTF");
-//		listFeature.add("no_jaccardBody");
-//		listFeature.add("no_jaccardTitle");
-//		listFeature.add("no_bm25");
-//		listFeature.add("no_lm");
-//		listFeature.add("no_ib");
-//		listFeature.add("no_avgSim");
-//		listFeature.add("no_sumOfMax");
-//		listFeature.add("no_maxSim");
-//		listFeature.add("no_minSim");
-//		listFeature.add("no_jaccardSim");
-//		listFeature.add("no_timeSpan");
-//		listFeature.add("no_LDASim");
-//		listFeature.add("TFIDF");
-		
+
 		listFeature.add("keyword");
 		listFeature.add("cosineTF");
 		listFeature.add("jaccardBody");
@@ -2231,21 +1066,21 @@ public class StartWeka extends BaseClass{
 		listFeature.add("TFIDF");
 
 		// Add feature name
-		listFeatureIndex.add("4,5,6,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,5,6,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,6,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,14,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,14,15,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,14,15,16");
+		int ignoredIndex = 3;
+		for(int i = 3; i <= listFeature.size(); i++){
+			String str = "";
+			for(int j = i; j < 18; j++){
+				if(ignoredIndex == i){
+					continue;
+				}
+				if(ignoredIndex == 17){
+					str += j;
+				}else{
+					str += j +",";
+				}
+			}
+			ignoredIndex++;
+		}
 
 		for (String dataset : listDatasetName)
 			for (String criteria : listCriteria)
@@ -2255,7 +1090,7 @@ public class StartWeka extends BaseClass{
 		int index = 0;
 		for (int i = 0; i < listTrainDataPath.size(); i++) {
 			for (int j = 0; j < listFeatureIndex.size(); j++) {
-				
+
 				switch (i) {
 				case 2:
 					RESULTPATH = "result/event/"+listTailName.get(index);
@@ -2281,19 +1116,21 @@ public class StartWeka extends BaseClass{
 				default:
 					break;
 				}
-				
+
 				System.out.println("----------------------------------------------------");
 				System.out.println("Feature: " + listFeature.get(j) + " listTrainDataPath=" + i);
 				System.out.println("Training SVM...");
-				wk.trainSVMLeaveOneFeatureOut(listTrainDataPath.get(i), MODElPATH, listFeatureIndex.get(j));				
+				SMOreg trainModel = new SMOreg();
+				wk.trainLOFO(trainModel, listTrainDataPath.get(i), MODElPATH, listFeatureIndex.get(j));
 				System.out.println("Testing SVM...");
-				wk.testSVMLeaveOneFeatureOut(MODElPATH, listTrainDataPath.get(i), listTestDataPath.get(i), listFeatureIndex.get(j));				
+				wk.testLOFO(trainModel, MODElPATH, listTrainDataPath.get(i), listTestDataPath.get(i),
+						EVALPATH, RESULTPATH, listFeatureIndex.get(j));
 				index++;
 			}
 		}
 
 	}
-	
+
 	public static void runSvcLofo() throws Exception {
 		StartWeka wk = new StartWeka();
 		System.out.println("Run total...");
@@ -2335,7 +1172,7 @@ public class StartWeka extends BaseClass{
 //		listCriteria.add("topic");
 		listCriteria.add("ne");
 
-		// Add feature name		
+		// Add feature name
 		listFeature.add("keyword");
 		listFeature.add("cosineTF");
 		listFeature.add("jaccardBody");
@@ -2353,21 +1190,21 @@ public class StartWeka extends BaseClass{
 		listFeature.add("TFIDF");
 
 		// Add feature name
-		listFeatureIndex.add("4,5,6,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,5,6,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,6,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,7,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,8,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,9,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,10,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,11,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,12,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,13,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,14,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,15,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,14,16,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,14,15,17");
-		listFeatureIndex.add("3,4,5,6,7,8,9,10,11,12,13,14,15,16");
+		int ignoredIndex = 3;
+		for(int i = 3; i <= listFeature.size(); i++){
+			String str = "";
+			for(int j = i; j < 18; j++){
+				if(ignoredIndex == i){
+					continue;
+				}
+				if(ignoredIndex == 17){
+					str += j;
+				}else{
+					str += j +",";
+				}
+			}
+			ignoredIndex++;
+		}
 
 		for (String dataset : listDatasetName)
 			for (String criteria : listCriteria)
@@ -2377,7 +1214,7 @@ public class StartWeka extends BaseClass{
 		int index = 0;
 		for (int i = 0; i < listTrainDataPath.size(); i++) {
 			for (int j = 0; j < listFeatureIndex.size(); j++) {
-				
+
 				switch (i) {
 				case 2:
 					RESULTPATH = "result/event/"+listTailName.get(index);
@@ -2403,13 +1240,15 @@ public class StartWeka extends BaseClass{
 				default:
 					break;
 				}
-				
+
 				System.out.println("----------------------------------------------------");
 				System.out.println("Feature: " + listFeature.get(j) + " listTrainDataPath=" + i);
 				System.out.println("Training SVM...");
-				wk.trainSVCLeaveOneFeatureOut(listTrainDataPath.get(i), MODElPATH, listFeatureIndex.get(j));				
+				SMOreg trainModel = new SMOreg();
+				wk.trainLOFO(trainModel, listTrainDataPath.get(i), MODElPATH, listFeatureIndex.get(j));
 				System.out.println("Testing SVM...");
-				wk.testSVCLeaveOneFeatureOut(MODElPATH, listTrainDataPath.get(i), listTestDataPath.get(i), listFeatureIndex.get(j));				
+				wk.testLOFO(trainModel, MODElPATH, listTrainDataPath.get(i), listTestDataPath.get(i),
+						EVALPATH, RESULTPATH, listFeatureIndex.get(j));
 				index++;
 			}
 		}
@@ -2471,11 +1310,12 @@ public class StartWeka extends BaseClass{
 				default:
 					break;
 				}
-
-				wk.trainREPTree(trainDataPath + "/Fold_" + n + "/d1_features_label_event.csv");
+				REPTree trainModel = new REPTree();
+//				wk.trainREPTree(trainDataPath + "/Fold_" + n + "/d1_features_label_event.csv");
 				System.out.println("Testing REPTree...");
-				wk.testREPTree(MODElPATH, trainDataPath + "/Fold_" + n + "/d1_features_label_event.csv",
-						testDataPath + "/Fold_" + n + "/features_082017_ts_event.csv");
+
+				wk.testModel(trainModel, MODElPATH, trainDataPath + "/Fold_" + n + "/d1_features_label_event.csv",
+						testDataPath + "/Fold_" + n + "/features_082017_ts_event.csv", EVALPATH, RESULTPATH, null);
 			}
 		}
 	}
@@ -2566,15 +1406,14 @@ public class StartWeka extends BaseClass{
 				System.out.println("----------------------------------------------------");
 				System.out.println("FeatureIndex=" + featureIndex + " listTrainDataPath=" + i);
 				System.out.println("Training REPTree...");
-				// wk.trainREPTreeLeaveOneFeatureOut(listTrainDataPath.get(i),featureIndex,
-				// "result/"+listTailName.get(index));
-				wk.trainM5PLeaveOneFeatureOut(listTrainDataPath.get(i), featureIndex,
-						"result/" + listTailName.get(index));
+				M5P trainModel = new M5P();
+				wk.trainLOFO(trainModel, listTrainDataPath.get(i),
+						"result/" + listTailName.get(index), String.valueOf(featureIndex));
 				System.out.println("Testing REPTree...");
 				// wk.testREPTreeLeaveOneFeatureOut("result/"+listTailName.get(index),listTrainDataPath.get(i),
 				// listTestDataPath.get(i),featureIndex);
-				wk.testM5PLeaveOneFeatureOut("result/" + listTailName.get(index), listTrainDataPath.get(i),
-						listTestDataPath.get(i), featureIndex);
+				wk.testLOFO(trainModel, "result/" + listTailName.get(index), listTrainDataPath.get(i), listTestDataPath.get(i),
+						EVALPATH, RESULTPATH, String.valueOf(featureIndex));
 				index++;
 			}
 		}
@@ -2601,6 +1440,7 @@ public class StartWeka extends BaseClass{
 		// runREPTree();
 		// runM5P();
 //		runSVC();
+//		runREPTree();
 		runSVM();
 //		runScó vcAndSvr();
 //		runSvcAndTfidf();

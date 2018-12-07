@@ -38,7 +38,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 import weka.gui.treevisualizer.PlaceNode2;
 import weka.gui.treevisualizer.TreeVisualizer;
 
-public class ModelGenerator {
+public class ModelGenerator extends BaseClass{
 
 	/**
 	 * Load data from file
@@ -311,37 +311,6 @@ public class ModelGenerator {
 		}
 	}
 
-	/**
-	 * Load REPTree pretrained model from file.
-	 * 
-	 * @param modelpath
-	 * @return
-	 */
-	public Classifier loadModelREPTree(String modelpath) {
-		REPTree model = new REPTree();
-		try {
-			model = (REPTree) SerializationHelper.read(modelpath);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return model;
-	}
-
-	/**
-	 * Load M5P pretrained model from file.
-	 * 
-	 * @param modelpath
-	 * @return
-	 */
-	public Classifier loadModelM5P(String modelpath) {
-		M5P model = new M5P();
-		try {
-			model = (M5P) SerializationHelper.read(modelpath);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return model;
-	}
 	
 	/**
 	 * Load SVM pretrained model from file.
